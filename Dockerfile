@@ -1,27 +1,15 @@
-# Etapa 1: Construcción (Build)
-FROM node:20-alpine as build
+# Build Angular
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Copiar package.json y package-lock.json
 COPY package*.json ./
-
-# Instalar dependencias
-RUN npm ci
-
-# Copiar el resto del código fuente
+COPY katrix-biometrics/ ./katrix-biometrics/
+RUN npm install
 COPY . .
+RUN npm run build
 
-# Construir la aplicación Angular
-RUN npm run build -- --configuration production
-
-# Etapa 2: Servidor (Nginx)
+# Serve con nginx
 FROM nginx:alpine
-
-# Copiar los archivos construidos
-COPY --from=build /app/dist/esencia-app/browser /usr/share/nginx/html
-
-# Exponer el puerto 80
+COPY --from=builder /app/dist/esencia-app/browser /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-
-# Iniciar Nginx
 CMD ["nginx", "-g", "daemon off;"]

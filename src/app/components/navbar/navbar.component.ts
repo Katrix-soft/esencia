@@ -10,7 +10,10 @@ import { FormsModule } from '@angular/forms';
     <nav class="navbar" [class.scrolled]="isScrolled">
       <div class="nav-inner">
         <!-- Logo -->
-        <div class="logo" (click)="scrollTo('hero')" style="cursor:pointer">Esencia</div>
+        <div class="logo" (click)="scrollTo('hero')" style="cursor:pointer">
+          <img src="assets/logo.png" alt="Esencia" class="logo-img" />
+          <span>Esencia</span>
+        </div>
 
         <!-- Desktop links -->
         <div class="nav-links">
@@ -98,11 +101,19 @@ import { FormsModule } from '@angular/forms';
       gap: 1.5rem;
     }
     .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       font-family: var(--font-headline);
       font-size: 1.5rem;
       font-weight: 700;
       color: var(--color-primary);
       white-space: nowrap;
+    }
+    .logo-img {
+      height: 2rem;
+      width: auto;
+      object-fit: contain;
     }
     .nav-links { display: none; gap: 2rem; }
     @media (min-width: 768px) { .nav-links { display: flex; } }

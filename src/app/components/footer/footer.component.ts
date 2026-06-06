@@ -7,7 +7,10 @@ import { Component } from '@angular/core';
     <footer class="footer animate-on-scroll">
       <div class="footer-top">
         <div class="footer-brand">
-          <div class="footer-logo">Esencia</div>
+          <div class="footer-logo">
+            <img src="assets/logo.png" alt="Esencia" class="logo-img" />
+            <span>Esencia</span>
+          </div>
           <p class="footer-tagline">Un producto de <a href="https://katrix.com.ar" target="_blank" rel="noopener" class="katrix-link">Katrix</a></p>
         </div>
         <nav class="footer-links" aria-label="Footer navigation">
@@ -51,10 +54,18 @@ import { Component } from '@angular/core';
     }
     .footer-brand { display: flex; flex-direction: column; gap: 0.25rem; }
     .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       font-family: var(--font-headline);
       font-size: 1.4rem;
       font-weight: 700;
       color: var(--color-primary);
+    }
+    .logo-img {
+      height: 2rem;
+      width: auto;
+      object-fit: contain;
     }
     .footer-tagline {
       font-size: 0.875rem;
