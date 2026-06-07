@@ -11,7 +11,8 @@ import { FormsModule } from '@angular/forms';
       <div class="nav-inner">
         <!-- Logo -->
         <div class="logo" (click)="scrollTo('hero')" style="cursor:pointer">
-          <img src="assets/logo.png" alt="Esencia" class="logo-img" />
+          <img src="assets/logo.png?v=2" alt="Esencia" class="logo-img" />
+          <span>Esencia</span>
         </div>
 
         <!-- Desktop links -->
