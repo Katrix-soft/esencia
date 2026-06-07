@@ -439,8 +439,12 @@ export class PricingComponent implements AfterViewInit {
         console.error('MercadoPago SDK not loaded');
         return;
       }
-      // Inicializado con tu Public Key
-      const mp = new MercadoPago('APP_USR-1c1ec552-cf16-4008-bcca-0d90e2baf8ff', {
+      // Pedimos la llave pública al backend dinámicamente
+      const configRes = await fetch('/api/config');
+      const configData = await configRes.json();
+      const publicKey = configData.publicKey || 'APP_USR-1c1ec552-cf16-4008-bcca-0d90e2baf8ff';
+
+      const mp = new MercadoPago(publicKey, {
         locale: 'es-AR'
       });
       const bricksBuilder = mp.bricks();
@@ -492,6 +496,8 @@ export class PricingComponent implements AfterViewInit {
               .then((data) => {
                 if (data.status === 'approved' || data.status === 'in_process') {
                   this.paymentSuccess = true;
+                  // MOSTRAR ORDER ID PARA HOMOLOGACIÓN
+                  alert(`¡Pago procesado con éxito!\n\nTu Order ID de prueba es: ${data.id}`);
                   resolve();
                 } else {
                   console.error('Pago rechazado o con error:', data);
