@@ -25,13 +25,13 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
               <p>Para emprendedores y perfumerías boutique iniciando su camino.</p>
             </div>
             <div class="price">
-              <span class="amount">$5.500</span>
+              <span class="amount">$11.900</span>
               <span class="period">/mes</span>
             </div>
             <ul class="features">
               <li>
                 <span class="material-symbols-outlined check">check_circle</span>
-                Catálogo Básico (hasta 100 productos)
+                Catálogo Básico (hasta 15 productos)
               </li>
               <li>
                 <span class="material-symbols-outlined check">check_circle</span>
