@@ -1,9 +1,13 @@
 import { Component, AfterViewInit } from '@angular/core';
+import { NgIf } from '@angular/common';
 import { ScrollRevealService } from '../../services/scroll-reveal.service';
+
+declare var MercadoPago: any;
 
 @Component({
   selector: 'app-pricing',
   standalone: true,
+  imports: [NgIf],
   template: `
     <section class="pricing-section" id="precios">
       <div class="dots-bg"></div>
@@ -46,7 +50,7 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
                 Datos seguros
               </li>
             </ul>
-            <button class="btn-outline active-scale">Elegir Semilla</button>
+            <button class="btn-outline active-scale" (click)="openPaymentModal('Semilla', 11900)">Elegir Semilla</button>
           </div>
 
           <!-- Flor (featured) -->
@@ -82,7 +86,7 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
                 <span class="featured-li">Datos seguros</span>
               </li>
             </ul>
-            <button class="btn-solid btn-shimmer active-scale">Comenzar con Flor</button>
+            <button class="btn-solid btn-shimmer active-scale" (click)="openPaymentModal('Flor', 20999)">Comenzar con Flor</button>
           </div>
 
           <!-- Extracto -->
@@ -125,9 +129,34 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
                 Actualizaciones gratis
               </li>
             </ul>
-            <button class="btn-outline active-scale">Elegir Extracto</button>
+            <button class="btn-outline active-scale" (click)="openPaymentModal('Extracto', 35000)">Elegir Extracto</button>
           </div>
 
+        </div>
+      </div>
+
+      <!-- Payment Modal -->
+      <div class="payment-modal-overlay" *ngIf="showPaymentModal" (click)="closePaymentModal()">
+        <div class="payment-modal-box" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="modal-title">
+              <span class="material-symbols-outlined shield-icon">security</span>
+              <h3>Pago Seguro</h3>
+            </div>
+            <button class="close-btn" (click)="closePaymentModal()">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          
+          <div class="modal-body" id="paymentBrick_container">
+            <!-- El SDK de Mercado Pago renderizará aquí -->
+          </div>
+          
+          <div class="success-overlay" *ngIf="paymentSuccess">
+            <span class="material-symbols-outlined check-icon">check_circle</span>
+            <h3>¡Pago Exitoso!</h3>
+            <p>Gracias por suscribirte al plan {{ selectedPlan }}.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -289,9 +318,171 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
       box-shadow: 0 2px 8px rgba(46,50,48,0.1);
     }
     .btn-solid:hover { background: var(--color-on-primary-fixed-variant); }
+
+    /* ---- Modal ---- */
+    .payment-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(46,50,48,0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      animation: fadeIn 0.2s ease;
+    }
+    .payment-modal-box {
+      background: var(--color-surface);
+      border-radius: 1.5rem;
+      width: 100%;
+      max-width: 450px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--color-surface-container-highest);
+      background: #f9f9f9;
+      border-radius: 1.5rem 1.5rem 0 0;
+    }
+    .modal-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .shield-icon {
+      color: var(--color-primary);
+      font-size: 1.2rem;
+    }
+    .modal-title h3 {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin: 0;
+      color: var(--color-on-background);
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .close-btn:hover { color: var(--color-on-background); }
+    .modal-body {
+      padding: 1.5rem;
+      min-height: 300px;
+    }
+    .success-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--color-surface);
+      border-radius: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 10;
+      padding: 2rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .success-overlay .check-icon {
+      font-size: 4rem;
+      color: var(--color-primary);
+      margin-bottom: 1rem;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   `]
 })
 export class PricingComponent implements AfterViewInit {
+  showPaymentModal = false;
+  paymentSuccess = false;
+  selectedPlan = '';
+  selectedAmount = 0;
+  paymentBrickController: any;
+
   constructor(private scrollReveal: ScrollRevealService) {}
   ngAfterViewInit(): void { this.scrollReveal.observeElements(); }
+
+  openPaymentModal(plan: string, amount: number) {
+    this.selectedPlan = plan;
+    this.selectedAmount = amount;
+    this.showPaymentModal = true;
+    this.paymentSuccess = false;
+    
+    setTimeout(() => {
+      this.initMercadoPagoBrick();
+    }, 100);
+  }
+
+  closePaymentModal() {
+    this.showPaymentModal = false;
+    if (this.paymentBrickController) {
+      this.paymentBrickController.unmount();
+      this.paymentBrickController = null;
+    }
+  }
+
+  async initMercadoPagoBrick() {
+    try {
+      if (!window.hasOwnProperty('MercadoPago')) {
+        console.error('MercadoPago SDK not loaded');
+        return;
+      }
+      // Inicializado con tu Public Key
+      const mp = new MercadoPago('APP_USR-1c1ec552-cf16-4008-bcca-0d90e2baf8ff', {
+        locale: 'es-AR'
+      });
+      const bricksBuilder = mp.bricks();
+      
+      const settings = {
+        initialization: {
+          amount: this.selectedAmount,
+        },
+        customization: {
+          visual: {
+            style: { theme: 'default' }
+          },
+          paymentMethods: {
+            creditCard: 'all',
+            debitCard: 'all',
+            mercadoPago: 'all',
+          },
+        },
+        callbacks: {
+          onReady: () => {},
+          onSubmit: ({ selectedPaymentMethod, formData }: any) => {
+            return new Promise<void>((resolve) => {
+              // Simulamos el procesamiento en el backend
+              setTimeout(() => {
+                this.paymentSuccess = true;
+                resolve();
+              }, 2000);
+            });
+          },
+          onError: (error: any) => {
+            console.error('MP Brick Error:', error);
+          },
+        },
+      };
+
+      this.paymentBrickController = await bricksBuilder.create(
+        'payment',
+        'paymentBrick_container',
+        settings
+      );
+    } catch (e) {
+      console.error('Error al inicializar MP:', e);
+    }
+  }
 }
