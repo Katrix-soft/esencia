@@ -26,16 +26,16 @@ import { FormsModule } from '@angular/forms';
 
         <!-- Actions -->
         <div class="nav-actions">
-          <button class="icon-btn" aria-label="Buscar" (click)="openSearch()">
+          <!-- <button class="icon-btn" aria-label="Buscar" (click)="openSearch()">
             <span class="material-symbols-outlined">search</span>
-          </button>
+          </button> -->
           <!-- <button class="icon-btn notif-btn" aria-label="Notificaciones" (click)="showNotif()">
             <span class="material-symbols-outlined">notifications</span>
             <span class="notif-dot" *ngIf="hasNotif"></span>
           </button> -->
-          <button class="icon-btn" aria-label="Perfil" (click)="showProfile()">
+          <!-- <button class="icon-btn" aria-label="Perfil" (click)="showProfile()">
             <span class="material-symbols-outlined">person</span>
-          </button>
+          </button> -->
           <button class="btn-primary btn-shimmer active-scale" (click)="scrollTo('precios')">Prueba Gratis</button>
         </div>
       </div>
