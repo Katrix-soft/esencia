@@ -148,7 +148,7 @@ declare var MercadoPago: any;
             </button>
           </div>
           
-          <div class="modal-body" id="paymentBrick_container">
+          <div class="modal-body" id="cardPaymentBrick_container">
             <!-- El SDK de Mercado Pago renderizará aquí -->
           </div>
           
@@ -452,45 +452,33 @@ export class PricingComponent implements AfterViewInit {
       const settings = {
         initialization: {
           amount: this.selectedAmount,
-          items: {
-            totalItemsAmount: this.selectedAmount,
-            itemsList: [
-              {
-                units: 1,
-                value: this.selectedAmount,
-                name: `Plan ${this.selectedPlan}`,
-                description: `Suscripción al plan ${this.selectedPlan}`
-              }
-            ]
-          }
+          payer: {
+            email: "",
+          },
         },
         customization: {
-          enableReviewStep: true,
           visual: {
-            style: { theme: 'default' }
+            style: {
+              theme: 'default',
+            },
           },
           paymentMethods: {
-            creditCard: 'all',
-            debitCard: 'all',
-            mercadoPago: 'all',
+            maxInstallments: 1,
           },
         },
         callbacks: {
-          onReady: () => {},
-          onSubmit: ({ selectedPaymentMethod, formData }: any) => {
+          onReady: () => {
+            // callback llamado cuando Brick esté listo
+          },
+          onSubmit: (cardFormData: any) => {
+            // callback llamado cuando el usuario haga clic en el botón enviar los datos
             return new Promise<void>((resolve, reject) => {
-              // Agregamos una descripción a la transacción
-              const payload = {
-                ...formData,
-                description: `Suscripción plan ${this.selectedPlan}`
-              };
-
-              fetch('/api/pagos/v1/payments', {
-                method: 'POST',
+              fetch("/process_payment", {
+                method: "POST",
                 headers: {
-                  'Content-Type': 'application/json'
+                  "Content-Type": "application/json",
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(cardFormData)
               })
               .then((response) => response.json())
               .then((data) => {
@@ -501,12 +489,13 @@ export class PricingComponent implements AfterViewInit {
                   resolve();
                 } else {
                   console.error('Pago rechazado o con error:', data);
-                  const errorMsg = data.details?.message || data.status_detail || data.error || 'Error desconocido';
+                  const errorMsg = data.message || data.status_detail || data.error || 'Error desconocido';
                   alert('El pago no pudo ser procesado:\n' + errorMsg);
                   reject();
                 }
               })
               .catch((error) => {
+                // tratar respuesta de error al intentar crear el pago
                 console.error('Error enviando pago:', error);
                 alert('Ocurrió un error al procesar el pago.');
                 reject();
@@ -514,14 +503,15 @@ export class PricingComponent implements AfterViewInit {
             });
           },
           onError: (error: any) => {
+            // callback llamado para todos los casos de error de Brick
             console.error('MP Brick Error:', error);
           },
         },
       };
 
       this.paymentBrickController = await bricksBuilder.create(
-        'payment',
-        'paymentBrick_container',
+        'cardPayment',
+        'cardPaymentBrick_container',
         settings
       );
     } catch (e) {

@@ -51,6 +51,20 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
   }
 });
 
+// Endpoint adicional para el Card Payment Brick de Mercado Pago
+app.post('/process_payment', (req, res) => {
+  payment.create({ body: req.body })
+    .then((response) => {
+      console.log(response);
+      res.status(201).json(response);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json(error);
+    });
+});
+
+
 // ==========================================
 // 2. Webhook de Mercado Pago
 // ==========================================
