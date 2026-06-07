@@ -6,10 +6,12 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Serve con nginx
-FROM nginx:alpine
-RUN rm -rf /usr/share/nginx/html/*
-COPY --from=builder /app/dist/esencia-app/browser/ /usr/share/nginx/html/
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Serve con Node.js (Express Backend + Angular SPA)
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY --from=builder /app/dist/ ./dist/
+COPY server.js ./
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", "server.js"]
