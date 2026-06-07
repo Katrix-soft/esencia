@@ -15,7 +15,7 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
         <div class="hero-text">
           <div class="badge animate-on-scroll">
             <span class="material-symbols-outlined">auto_awesome</span>
-            SaaS Especializado en Perfumería
+            SaaS Especializado en Software
           </div>
 
           <h1 class="animate-on-scroll delay-100">
