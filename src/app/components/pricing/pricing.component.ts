@@ -462,12 +462,36 @@ export class PricingComponent implements AfterViewInit {
         callbacks: {
           onReady: () => {},
           onSubmit: ({ selectedPaymentMethod, formData }: any) => {
-            return new Promise<void>((resolve) => {
-              // Simulamos el procesamiento en el backend
-              setTimeout(() => {
-                this.paymentSuccess = true;
-                resolve();
-              }, 2000);
+            return new Promise<void>((resolve, reject) => {
+              // Agregamos una descripción a la transacción
+              const payload = {
+                ...formData,
+                description: \`Suscripción plan \${this.selectedPlan}\`
+              };
+
+              fetch('/api/pagos/v1/payments', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+              })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === 'approved' || data.status === 'in_process') {
+                  this.paymentSuccess = true;
+                  resolve();
+                } else {
+                  console.error('Pago rechazado o con error:', data);
+                  alert('El pago no pudo ser procesado: ' + data.status_detail);
+                  reject();
+                }
+              })
+              .catch((error) => {
+                console.error('Error enviando pago:', error);
+                alert('Ocurrió un error al procesar el pago.');
+                reject();
+              });
             });
           },
           onError: (error: any) => {
