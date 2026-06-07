@@ -45,7 +45,7 @@ import { ScrollRevealService } from './services/scroll-reveal.service';
         <app-crm />
         <app-catalog />
         <app-app-showcase />
-        <app-testimonials />
+        <!-- <app-testimonials /> -->
         <app-pricing />
         <app-cta-final />
       </main>
