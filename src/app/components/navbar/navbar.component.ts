@@ -12,7 +12,6 @@ import { FormsModule } from '@angular/forms';
         <!-- Logo -->
         <div class="logo" (click)="scrollTo('hero')" style="cursor:pointer">
           <img src="assets/logo.png" alt="Esencia" class="logo-img" />
-          <span>Esencia</span>
         </div>
 
         <!-- Desktop links -->
@@ -111,7 +110,7 @@ import { FormsModule } from '@angular/forms';
       white-space: nowrap;
     }
     .logo-img {
-      height: 3.5rem;
+      height: 5rem;
       width: auto;
       object-fit: contain;
     }
