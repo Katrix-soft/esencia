@@ -41,6 +41,10 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
                 <span class="material-symbols-outlined check">check_circle</span>
                 CRM Estándar
               </li>
+              <li>
+                <span class="material-symbols-outlined check">check_circle</span>
+                Datos seguros
+              </li>
             </ul>
             <button class="btn-outline active-scale">Elegir Semilla</button>
           </div>
@@ -73,6 +77,10 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
                 <span class="material-symbols-outlined check">check_circle</span>
                 <span class="featured-li">Alarmas Predictivas de Stock</span>
               </li>
+              <li>
+                <span class="material-symbols-outlined check">check_circle</span>
+                <span class="featured-li">Datos seguros</span>
+              </li>
             </ul>
             <button class="btn-solid btn-shimmer active-scale">Comenzar con Flor</button>
           </div>
@@ -103,6 +111,18 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
               <li>
                 <span class="material-symbols-outlined check">check_circle</span>
                 Marketing Automatizado
+              </li>
+              <li>
+                <span class="material-symbols-outlined check">check_circle</span>
+                Datos seguros
+              </li>
+              <li>
+                <span class="material-symbols-outlined check">check_circle</span>
+                Soporte 24/7
+              </li>
+              <li>
+                <span class="material-symbols-outlined check">check_circle</span>
+                Actualizaciones gratis
               </li>
             </ul>
             <button class="btn-outline active-scale">Elegir Extracto</button>

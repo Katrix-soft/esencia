@@ -31,24 +31,7 @@ import { Component } from '@angular/core';
             </button>
           </div>
 
-          <div class="guarantees">
-            <div class="guarantee">
-              <span class="material-symbols-outlined g-icon">verified</span>
-              Sin contratos
-            </div>
-            <div class="guarantee">
-              <span class="material-symbols-outlined g-icon">support_agent</span>
-              Soporte 24/7
-            </div>
-            <div class="guarantee">
-              <span class="material-symbols-outlined g-icon">lock</span>
-              Datos seguros
-            </div>
-            <div class="guarantee">
-              <span class="material-symbols-outlined g-icon">update</span>
-              Actualizaciones gratis
-            </div>
-          </div>
+
         </div>
       </div>
     </section>
@@ -160,22 +143,8 @@ import { Component } from '@angular/core';
       font-family: var(--font-body);
     }
     .btn-ghost:hover { background:rgba(255,255,255,0.18); border-color:rgba(255,255,255,0.5); }
-    .guarantees {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 1.5rem;
-    }
-    .guarantee {
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      font-size: 0.875rem;
-      color: rgba(255,255,255,0.7);
-      font-weight: 600;
-    }
-    .g-icon { font-size: 1.1rem; color: rgba(255,255,255,0.9); }
   `]
+
 })
 export class CtaFinalComponent {
   scrollTo(id: string): void {
