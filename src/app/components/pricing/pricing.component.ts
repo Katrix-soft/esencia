@@ -57,7 +57,7 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
               <p class="featured-sub">Para perfumerías establecidas buscando optimizar y escalar.</p>
             </div>
             <div class="price">
-              <span class="amount featured-amount">$11.500</span>
+              <span class="amount featured-amount">$20.999</span>
               <span class="period featured-period">/mes</span>
             </div>
             <ul class="features">
@@ -92,7 +92,7 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
               <p>La solución definitiva con Inteligencia Artificial para líderes del mercado.</p>
             </div>
             <div class="price">
-              <span class="amount">$21.900</span>
+              <span class="amount">$35.000</span>
               <span class="period">/mes</span>
             </div>
             <ul class="features">
