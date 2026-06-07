@@ -448,8 +448,20 @@ export class PricingComponent implements AfterViewInit {
       const settings = {
         initialization: {
           amount: this.selectedAmount,
+          items: {
+            totalItemsAmount: this.selectedAmount,
+            itemsList: [
+              {
+                units: 1,
+                value: this.selectedAmount,
+                name: `Plan ${this.selectedPlan}`,
+                description: `Suscripción al plan ${this.selectedPlan}`
+              }
+            ]
+          }
         },
         customization: {
+          enableReviewStep: true,
           visual: {
             style: { theme: 'default' }
           },
