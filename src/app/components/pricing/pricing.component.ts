@@ -466,7 +466,7 @@ export class PricingComponent implements AfterViewInit {
               // Agregamos una descripción a la transacción
               const payload = {
                 ...formData,
-                description: \`Suscripción plan \${this.selectedPlan}\`
+                description: `Suscripción plan ${this.selectedPlan}`
               };
 
               fetch('/api/pagos/v1/payments', {
