@@ -103,15 +103,15 @@ import { FormsModule } from '@angular/forms';
     .logo {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
       font-family: var(--font-headline);
-      font-size: 1.5rem;
+      font-size: 1.75rem;
       font-weight: 700;
       color: var(--color-primary);
       white-space: nowrap;
     }
     .logo-img {
-      height: 2rem;
+      height: 3.5rem;
       width: auto;
       object-fit: contain;
     }
