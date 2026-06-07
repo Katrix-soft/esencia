@@ -501,7 +501,8 @@ export class PricingComponent implements AfterViewInit {
                   resolve();
                 } else {
                   console.error('Pago rechazado o con error:', data);
-                  alert('El pago no pudo ser procesado: ' + data.status_detail);
+                  const errorMsg = data.details?.message || data.status_detail || data.error || 'Error desconocido';
+                  alert('El pago no pudo ser procesado:\n' + errorMsg);
                   reject();
                 }
               })
