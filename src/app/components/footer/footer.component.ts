@@ -8,8 +8,7 @@ import { Component } from '@angular/core';
       <div class="footer-top">
         <div class="footer-brand">
           <div class="footer-logo">
-            <img src="assets/logo.png" alt="Esencia" class="logo-img" />
-            <span>Esencia</span>
+            <img src="assets/Esencia.png" alt="Esencia" class="logo-img" />
           </div>
           <p class="footer-tagline">Un producto de <a href="https://katrix.com.ar" target="_blank" rel="noopener" class="katrix-link">Katrix</a></p>
         </div>
@@ -63,9 +62,13 @@ import { Component } from '@angular/core';
       color: var(--color-primary);
     }
     .logo-img {
-      height: 2rem;
+      height: 2.5rem;
       width: auto;
       object-fit: contain;
+      mix-blend-mode: multiply;
+      border: 1px solid var(--color-outline-variant);
+      border-radius: var(--radius-sm);
+      padding: 0.1rem;
     }
     .footer-tagline {
       font-size: 0.875rem;

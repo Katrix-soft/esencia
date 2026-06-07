@@ -11,8 +11,7 @@ import { FormsModule } from '@angular/forms';
       <div class="nav-inner">
         <!-- Logo -->
         <div class="logo" (click)="scrollTo('hero')" style="cursor:pointer">
-          <img src="assets/logo.png?v=2" alt="Esencia" class="logo-img" />
-          <span>Esencia</span>
+          <img src="assets/Esencia.png" alt="Esencia" class="logo-img" />
         </div>
 
         <!-- Desktop links -->
@@ -111,9 +110,13 @@ import { FormsModule } from '@angular/forms';
       white-space: nowrap;
     }
     .logo-img {
-      height: 5rem;
+      height: 6.5rem;
       width: auto;
       object-fit: contain;
+      mix-blend-mode: multiply;
+      border: 1px solid var(--color-outline-variant);
+      border-radius: var(--radius-sm);
+      padding: 0.15rem;
     }
     .nav-links { display: none; gap: 2rem; }
     @media (min-width: 768px) { .nav-links { display: flex; } }
