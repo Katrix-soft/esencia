@@ -61,31 +61,14 @@ function mapCardFormDataToOrder(cardFormData) {
   }
 
   const email = cardFormData.payer?.email || 'test@testuser.com';
-  const firstName = cardFormData.payer?.first_name || 'Juan';
-  const lastName = cardFormData.payer?.last_name || 'Perez';
 
   const body = {
     type: 'online',
     processing_mode: 'automatic',
     total_amount: amountStr,
     external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
-    statement_descriptor: 'ESENCIA',
     payer: {
-      email: email,
-      first_name: firstName,
-      last_name: lastName
-    },
-    additional_info: {
-      payer: {
-        registration_date: new Date().toISOString()
-      },
-      shipments: {
-        receivers_address: {
-          zip_code: '1425',
-          state_name: 'CABA',
-          city_name: 'Buenos Aires'
-        }
-      }
+      email: email
     },
     items: [
       {
