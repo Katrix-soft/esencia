@@ -44,9 +44,7 @@ function mapCardFormDataToOrder(cardFormData) {
     }
   }
 
-  // 1. Requisito: Cantidad de productos (items.quantity)
-  // 3. Requisito: Precio unitario del producto (items.unit_price)
-  // 9. Buena práctica: Código del producto (items.external_code)
+  // Items para la información adicional del pago
   const items = [
     {
       id: cardFormData.plan_name ? `plan_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'plan_esencial',
@@ -60,8 +58,8 @@ function mapCardFormDataToOrder(cardFormData) {
     }
   ];
 
-  // 4. Buena práctica: Teléfono del comprador (payer.phone)
-  const payer = {
+  // Payer detallado para el pago
+  const detailedPayer = {
     email: cardFormData.payer?.email || 'test@testuser.com',
     phone: {
       area_code: cardFormData.payer?.phone?.area_code || '11',
@@ -70,39 +68,23 @@ function mapCardFormDataToOrder(cardFormData) {
   };
 
   if (cardFormData.payer?.first_name) {
-    payer.first_name = cardFormData.payer.first_name;
+    detailedPayer.first_name = cardFormData.payer.first_name;
   }
   if (cardFormData.payer?.last_name) {
-    payer.last_name = cardFormData.payer.last_name;
+    detailedPayer.last_name = cardFormData.payer.last_name;
   }
   if (cardFormData.payer?.identification) {
-    payer.identification = cardFormData.payer.identification;
+    detailedPayer.identification = cardFormData.payer.identification;
   }
 
-  const paymentObj = {
-    amount: amountStr,
-    payment_method: {
-      id: cardFormData.payment_method_id,
-      type: paymentMethodType
-    }
-  };
-
-  // Solo agregar token e installments si existen (para tarjetas)
-  if (cardFormData.token) {
-    paymentObj.payment_method.token = cardFormData.token;
-  }
-  if (cardFormData.installments) {
-    paymentObj.payment_method.installments = Number(cardFormData.installments);
-  }
-
-  // 5. Buena práctica: Envío prioritario (express_shipments)
-  // 6. Buena práctica: Tipo de autenticación del pagador (authentication_type)
-  // 7. Buena práctica: Fecha de la última compra del pagador (last_purchase)
-  // 8. Buena práctica: Primera compra del cliente (is_first_purchase_online)
-  // 11. Buena práctica: Número de la calle a donde se enviará el pedido (street_number)
+  // Información adicional del pago
   const additionalInfo = {
     items: items,
     payer: {
+      phone: {
+        area_code: cardFormData.payer?.phone?.area_code || '11',
+        number: cardFormData.payer?.phone?.number || '1543210987'
+      },
       authentication_type: 'email',
       last_purchase: new Date().toISOString(),
       is_first_purchase_online: true
@@ -129,17 +111,40 @@ function mapCardFormDataToOrder(cardFormData) {
     }
   };
 
-  // 2. Requisito: Descripción-Resumen de tarjeta (statement_descriptor)
-  // 10. Buena práctica: Información sensible en la Referencia externa (external_reference sin PII)
+  // Objeto de transacción de Pago (que va dentro de la Order)
+  const paymentObj = {
+    amount: amountStr,
+    payment_method: {
+      id: cardFormData.payment_method_id,
+      type: paymentMethodType
+    },
+    statement_descriptor: 'ESENCIA',
+    payer: detailedPayer,
+    additional_info: additionalInfo
+  };
+
+  // Solo agregar token e installments si existen (para tarjetas)
+  if (cardFormData.token) {
+    paymentObj.payment_method.token = cardFormData.token;
+  }
+  if (cardFormData.installments) {
+    paymentObj.payment_method.installments = Number(cardFormData.installments);
+  }
+
+  // Payer básico para la raíz de la Order (que no tire error por propiedades no soportadas)
+  const rootPayer = {
+    email: cardFormData.payer?.email || 'test@testuser.com'
+  };
+  if (cardFormData.payer?.identification) {
+    rootPayer.identification = cardFormData.payer.identification;
+  }
+
   return {
     type: 'online',
     processing_mode: 'automatic',
     external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
     total_amount: amountStr,
-    statement_descriptor: 'ESENCIA',
-    payer,
-    items,
-    additional_info: additionalInfo,
+    payer: rootPayer,
     transactions: {
       payments: [paymentObj]
     }
@@ -158,7 +163,7 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
     const response = await order.create({ body: orderBody });
     res.status(201).json(response);
   } catch (error) {
-    console.error('Error al procesar la Order con MP:', error);
+    console.error('Error al procesar la Order con MP:', JSON.stringify(error, null, 2));
     res.status(500).json({ error: 'Error procesando el pago', details: error });
   }
 });
@@ -175,7 +180,7 @@ app.post('/process_payment', (req, res) => {
         res.status(201).json(response);
       })
       .catch((error) => {
-        console.error('Error al crear la Order en MP:', error);
+        console.error('Error al crear la Order en MP:', JSON.stringify(error, null, 2));
         res.status(500).json(error);
       });
   } catch (error) {
