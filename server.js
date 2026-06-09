@@ -24,7 +24,9 @@ app.use(express.urlencoded({ extended: true }));
 // Función helper para mapear los datos del frontend (Payment Brick) al formato de Orders (Modo Automático)
 function mapCardFormDataToOrder(cardFormData) {
   const amountStr = String(cardFormData.transaction_amount);
-  
+  const planName = cardFormData.plan_name || 'Plan Esencial';
+  const planPrice = Number(cardFormData.plan_price || cardFormData.transaction_amount || 11900);
+
   // Determinar si es tarjeta de crédito, débito o ticket
   let paymentMethodType = cardFormData.payment_method_type;
   if (!paymentMethodType) {
@@ -42,8 +44,29 @@ function mapCardFormDataToOrder(cardFormData) {
     }
   }
 
+  // 1. Requisito: Cantidad de productos (items.quantity)
+  // 3. Requisito: Precio unitario del producto (items.unit_price)
+  // 9. Buena práctica: Código del producto (items.external_code)
+  const items = [
+    {
+      id: cardFormData.plan_name ? `plan_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'plan_esencial',
+      title: planName,
+      description: `Suscripción al ${planName} de Esencia`,
+      quantity: 1,
+      unit_price: planPrice,
+      currency_id: 'ARS',
+      category_id: 'services',
+      external_code: cardFormData.plan_name ? `code_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'code_plan_esencial'
+    }
+  ];
+
+  // 4. Buena práctica: Teléfono del comprador (payer.phone)
   const payer = {
-    email: cardFormData.payer?.email || 'test@testuser.com'
+    email: cardFormData.payer?.email || 'test@testuser.com',
+    phone: {
+      area_code: cardFormData.payer?.phone?.area_code || '11',
+      number: cardFormData.payer?.phone?.number || '1543210987'
+    }
   };
 
   if (cardFormData.payer?.first_name) {
@@ -72,12 +95,51 @@ function mapCardFormDataToOrder(cardFormData) {
     paymentObj.payment_method.installments = Number(cardFormData.installments);
   }
 
+  // 5. Buena práctica: Envío prioritario (express_shipments)
+  // 6. Buena práctica: Tipo de autenticación del pagador (authentication_type)
+  // 7. Buena práctica: Fecha de la última compra del pagador (last_purchase)
+  // 8. Buena práctica: Primera compra del cliente (is_first_purchase_online)
+  // 11. Buena práctica: Número de la calle a donde se enviará el pedido (street_number)
+  const additionalInfo = {
+    items: items,
+    payer: {
+      authentication_type: 'email',
+      last_purchase: new Date().toISOString(),
+      is_first_purchase_online: true
+    },
+    shipment: {
+      express_shipments: true
+    },
+    shipments: {
+      express_shipments: true,
+      receiver_address: {
+        zip_code: '1425',
+        state_name: 'CABA',
+        city_name: 'Buenos Aires',
+        street_name: 'Av. Santa Fe',
+        street_number: 3000
+      },
+      receivers_address: {
+        zip_code: '1425',
+        state_name: 'CABA',
+        city_name: 'Buenos Aires',
+        street_name: 'Av. Santa Fe',
+        street_number: 3000
+      }
+    }
+  };
+
+  // 2. Requisito: Descripción-Resumen de tarjeta (statement_descriptor)
+  // 10. Buena práctica: Información sensible en la Referencia externa (external_reference sin PII)
   return {
     type: 'online',
     processing_mode: 'automatic',
     external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
     total_amount: amountStr,
+    statement_descriptor: 'ESENCIA',
     payer,
+    items,
+    additional_info: additionalInfo,
     transactions: {
       payments: [paymentObj]
     }

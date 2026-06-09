@@ -484,7 +484,9 @@ export class PricingComponent implements AfterViewInit {
                 },
                 body: JSON.stringify({
                   ...formData,
-                  payment_method_type: selectedPaymentMethod
+                  payment_method_type: selectedPaymentMethod,
+                  plan_name: this.selectedPlan,
+                  plan_price: this.selectedAmount
                 })
               })
               .then((response) => response.json())
