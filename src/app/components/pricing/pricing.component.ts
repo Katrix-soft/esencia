@@ -143,7 +143,7 @@ declare var Swal: any;
           <div class="modal-header">
             <div class="modal-title">
               <span class="material-symbols-outlined shield-icon">security</span>
-              <h3>{{ checkoutStep === 'form' ? 'Datos de Compra' : 'Pago Seguro' }}</h3>
+              <h3>{{ checkoutStep === 'payment' ? 'Pago Seguro' : 'Cuenta' }}</h3>
             </div>
             <button class="close-btn" (click)="closePaymentModal()">
               <span class="material-symbols-outlined">close</span>
@@ -152,23 +152,59 @@ declare var Swal: any;
           
           <div class="modal-body">
             
-            <!-- Paso 1: Datos Personales -->
-            <div *ngIf="checkoutStep === 'form'" class="checkout-form-step">
-              <p class="form-instructions">Completa tus datos para asociar la suscripción a tu cuenta.</p>
-              
-              <div class="form-group">
-                <label for="firstName">Nombre</label>
-                <input type="text" id="firstName" [(ngModel)]="customerData.firstName" placeholder="Ej. Juan" class="form-control">
+            <!-- Auth Layout -->
+            <div *ngIf="checkoutStep === 'login' || checkoutStep === 'register'" class="auth-container">
+              <div class="auth-tabs">
+                <button [class.active]="checkoutStep === 'login'" (click)="checkoutStep = 'login'">Iniciar Sesión</button>
+                <button [class.active]="checkoutStep === 'register'" (click)="checkoutStep = 'register'">Crear Cuenta</button>
               </div>
 
-              <div class="form-group">
-                <label for="lastName">Apellido</label>
-                <input type="text" id="lastName" [(ngModel)]="customerData.lastName" placeholder="Ej. Perez" class="form-control">
+              <!-- Login Form -->
+              <div *ngIf="checkoutStep === 'login'" class="auth-form animate-fade-in">
+                <p class="form-instructions">Ingresa a tu cuenta para continuar con la compra.</p>
+                <div class="form-group">
+                  <label for="loginEmail">Email</label>
+                  <input type="email" id="loginEmail" placeholder="tu@email.com" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="loginPass">Contraseña</label>
+                  <input type="password" id="loginPass" placeholder="••••••••" class="form-control">
+                </div>
+                <button class="btn-solid form-continue-btn active-scale" (click)="simulateLogin()">
+                  Iniciar Sesión y Pagar
+                </button>
               </div>
 
-              <button class="btn-solid form-continue-btn active-scale" (click)="continueToPayment()" [disabled]="!customerData.firstName || !customerData.lastName">
-                Continuar al Pago
-              </button>
+              <!-- Register Form -->
+              <div *ngIf="checkoutStep === 'register'" class="auth-form animate-fade-in">
+                <p class="form-instructions">Crea tu cuenta en Esencia para gestionar tu negocio.</p>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="firstName">Nombre</label>
+                    <input type="text" id="firstName" [(ngModel)]="customerData.firstName" placeholder="Ej. Juan" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label for="lastName">Apellido</label>
+                    <input type="text" id="lastName" [(ngModel)]="customerData.lastName" placeholder="Ej. Perez" class="form-control">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="regEmail">Email</label>
+                  <input type="email" id="regEmail" [(ngModel)]="customerData.email" placeholder="tu@email.com" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="regPass">Contraseña</label>
+                  <input type="password" id="regPass" placeholder="Mínimo 8 caracteres" class="form-control">
+                </div>
+
+                <button class="btn-solid form-continue-btn active-scale" 
+                        (click)="continueToPayment()" 
+                        [disabled]="!customerData.firstName || !customerData.lastName || !customerData.email">
+                  Crear Cuenta y Continuar
+                </button>
+              </div>
             </div>
 
             <!-- Paso 2: Mercado Pago Brick -->
@@ -220,8 +256,6 @@ declare var Swal: any;
       font-size: 1.1rem;
       color: var(--color-on-surface-variant);
     }
-
-    /* ---- Grid ---- */
     .pricing-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -231,8 +265,6 @@ declare var Swal: any;
     @media (min-width: 768px) {
       .pricing-grid { grid-template-columns: repeat(3, 1fr); }
     }
-
-    /* ---- Base card ---- */
     .pricing-card {
       background: rgba(250,246,240,0.9);
       backdrop-filter: blur(4px);
@@ -250,8 +282,6 @@ declare var Swal: any;
       transform: translateY(-8px);
       box-shadow: 0 12px 40px rgba(46,50,48,0.12);
     }
-
-    /* ---- Featured card ---- */
     .pricing-card.featured {
       background: rgba(120,168,134,0.95);
       border: 2px solid var(--color-primary);
@@ -273,8 +303,10 @@ declare var Swal: any;
       letter-spacing: 0.05em;
       white-space: nowrap;
     }
-
-    /* ---- Card content ---- */
+    .featured-title, .featured-amount, .featured-period, .featured-sub, .featured-li {
+      color: var(--color-on-primary) !important;
+    }
+    .featured .check { color: rgba(255,255,255,0.9) !important; }
     .card-header { margin-bottom: 2rem; }
     .card-header h3 {
       font-size: 1.5rem;
@@ -282,93 +314,119 @@ declare var Swal: any;
       color: var(--color-on-background);
       margin-bottom: 0.5rem;
     }
-    .card-header p { font-size: 0.875rem; color: var(--color-on-surface-variant); }
-    .featured-title { color: var(--color-on-primary-fixed) !important; }
-    .featured-sub { color: var(--color-on-primary-fixed-variant) !important; }
-
+    .card-header p {
+      font-size: 0.95rem;
+      color: var(--color-on-surface-variant);
+      line-height: 1.5;
+    }
     .price {
+      margin-bottom: 2rem;
       display: flex;
       align-items: baseline;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
+      gap: 0.25rem;
     }
-    .amount { font-size: 2.5rem; font-weight: 700; color: var(--color-on-background); }
-    .period { color: var(--color-on-surface-variant); }
-    .featured-amount { font-size: 3rem; color: var(--color-on-primary-fixed) !important; }
-    .featured-period { color: var(--color-on-primary-fixed-variant) !important; }
-
+    .amount {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--color-on-background);
+      letter-spacing: -0.02em;
+    }
+    .period {
+      color: var(--color-on-surface-variant);
+      font-weight: 500;
+    }
     .features {
       list-style: none;
-      flex: 1;
+      padding: 0;
+      margin: 0 0 2.5rem 0;
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      margin-bottom: 2rem;
     }
     .features li {
       display: flex;
       align-items: flex-start;
       gap: 0.75rem;
-      color: var(--color-on-background);
       font-size: 0.95rem;
+      color: var(--color-on-background);
+      line-height: 1.4;
     }
     .check {
       color: var(--color-primary);
       font-size: 1.25rem;
       flex-shrink: 0;
     }
-    .featured-li { color: var(--color-on-primary-fixed); }
-
-    /* ---- Buttons ---- */
+    button {
+      width: 100%;
+      padding: 1rem;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
     .btn-outline {
-      width: 100%;
-      border: 2px solid var(--color-outline-variant);
-      background: var(--color-surface);
+      background: transparent;
+      border: 2px solid var(--color-primary);
       color: var(--color-primary);
-      padding: 0.75rem 1.5rem;
-      border-radius: var(--radius-sm);
-      font-weight: 700;
-      transition: background 0.2s, transform 0.15s;
     }
-    .btn-outline:hover { background: var(--color-secondary-container); }
-
+    .btn-outline:hover { background: rgba(74,124,89,0.05); }
     .btn-solid {
-      width: 100%;
-      background: var(--color-primary);
-      color: var(--color-on-primary);
-      padding: 1rem 1.5rem;
-      border-radius: var(--radius-sm);
-      font-weight: 700;
-      font-size: 1.05rem;
-      transition: background 0.15s, transform 0.15s;
-      box-shadow: 0 2px 8px rgba(46,50,48,0.1);
+      background: var(--color-on-primary);
+      color: var(--color-primary);
+      border: none;
     }
-    .btn-solid:hover { background: var(--color-on-primary-fixed-variant); }
-
-    /* ---- Modal ---- */
+    .btn-solid:hover {
+      background: var(--color-surface);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .btn-shimmer {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-shimmer::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to right,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.3) 50%,
+        rgba(255,255,255,0) 100%
+      );
+      transform: rotate(30deg);
+      animation: shimmer 3s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) rotate(30deg); }
+      100% { transform: translateX(100%) rotate(30deg); }
+    }
     .payment-modal-overlay {
       position: fixed;
       inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
       z-index: 1000;
-      background: rgba(46,50,48,0.6);
-      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 1rem;
-      animation: fadeIn 0.2s ease;
+      animation: fadeIn 0.3s ease;
     }
     .payment-modal-box {
       background: var(--color-surface);
       border-radius: 1.5rem;
       width: 100%;
-      max-width: 450px;
+      max-width: 500px;
       max-height: 90vh;
       overflow-y: auto;
       box-shadow: 0 20px 40px rgba(0,0,0,0.2);
       position: relative;
-      display: flex;
-      flex-direction: column;
     }
     .modal-header {
       display: flex;
@@ -376,38 +434,15 @@ declare var Swal: any;
       align-items: center;
       padding: 1.25rem 1.5rem;
       border-bottom: 1px solid var(--color-surface-container-highest);
-      background: #f9f9f9;
-      border-radius: 1.5rem 1.5rem 0 0;
     }
-    .modal-title {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .shield-icon {
-      color: var(--color-primary);
-      font-size: 1.2rem;
-    }
-    .modal-title h3 {
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin: 0;
-      color: var(--color-on-background);
-    }
+    .modal-title { display: flex; align-items: center; gap: 0.5rem; }
+    .shield-icon { color: var(--color-primary); font-size: 1.2rem; }
+    .modal-title h3 { font-weight: 700; font-size: 1.1rem; margin: 0; }
     .close-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--color-on-surface-variant);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: none; border: none; cursor: pointer; color: var(--color-on-surface-variant);
+      display: flex; align-items: center; justify-content: center;
     }
-    .close-btn:hover { color: var(--color-on-background); }
-    .modal-body {
-      padding: 1.5rem;
-      min-height: 300px;
-    }
+    .modal-body { padding: 1.5rem; min-height: 300px; }
     .success-overlay {
       position: absolute;
       inset: 0;
@@ -428,61 +463,63 @@ declare var Swal: any;
       margin-bottom: 1rem;
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    /* ---- Pre-checkout Form Styles ---- */
-    .checkout-form-step {
+    .auth-container { display: flex; flex-direction: column; gap: 1.5rem; }
+    .auth-tabs {
       display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
+      gap: 1.5rem;
+      border-bottom: 2px solid var(--color-surface-container-highest);
     }
-    .form-instructions {
-      color: var(--color-on-surface-variant);
-      font-size: 0.95rem;
-      margin: 0;
-    }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .form-group label {
+    .auth-tabs button {
+      background: none;
+      border: none;
+      font-size: 1rem;
       font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--color-on-background);
+      color: var(--color-on-surface-variant);
+      cursor: pointer;
+      padding: 0.75rem 0;
+      position: relative;
+      transition: color 0.3s ease;
+      width: auto;
+      border-radius: 0;
     }
+    .auth-tabs button.active { color: var(--color-primary); }
+    .auth-tabs button.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--color-primary);
+      border-radius: 3px 3px 0 0;
+    }
+    .auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .animate-fade-in { animation: fadeIn 0.3s ease; }
+    .form-instructions { color: var(--color-on-surface-variant); font-size: 0.95rem; margin: 0; }
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .form-group label { font-weight: 600; font-size: 0.9rem; color: var(--color-on-background); }
     .form-control {
       padding: 0.75rem 1rem;
       border: 1px solid var(--color-surface-container-highest);
       border-radius: 0.5rem;
       background: var(--color-surface);
-      color: var(--color-on-background);
       font-size: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .form-control:focus {
-      outline: none;
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(74,124,89,0.1);
-    }
+    .form-control:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(74,124,89,0.1); }
     .form-continue-btn {
       margin-top: 1rem;
       padding: 1rem;
-      border: none;
       border-radius: 0.5rem;
-      background: var(--color-primary);
-      color: var(--color-on-primary);
+      background: var(--color-primary) !important;
+      color: var(--color-on-primary) !important;
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
       transition: background 0.2s, opacity 0.2s;
     }
-    .form-continue-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .form-continue-btn:not(:disabled):hover {
-      background: var(--color-secondary);
-    }
+    .form-continue-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .form-continue-btn:not(:disabled):hover { background: var(--color-secondary) !important; }
   `]
 })
 export class PricingComponent implements AfterViewInit {
@@ -492,11 +529,11 @@ export class PricingComponent implements AfterViewInit {
   selectedAmount = 0;
   paymentBrickController: any;
 
-  // Nuevas variables para el pre-checkout
-  checkoutStep: 'form' | 'payment' = 'form';
+  checkoutStep: 'login' | 'register' | 'payment' = 'register';
   customerData = {
     firstName: '',
-    lastName: ''
+    lastName: '',
+    email: ''
   };
 
   constructor(private scrollReveal: ScrollRevealService) {}
@@ -508,9 +545,8 @@ export class PricingComponent implements AfterViewInit {
     this.showPaymentModal = true;
     this.paymentSuccess = false;
     
-    // Al abrir, siempre mostramos primero el form y limpiamos datos
-    this.checkoutStep = 'form';
-    this.customerData = { firstName: '', lastName: '' };
+    this.checkoutStep = 'register';
+    this.customerData = { firstName: '', lastName: '', email: '' };
     
     if (this.paymentBrickController) {
       this.paymentBrickController.unmount();
@@ -518,12 +554,16 @@ export class PricingComponent implements AfterViewInit {
     }
   }
 
+  simulateLogin() {
+    this.customerData.firstName = 'Juan';
+    this.customerData.lastName = 'Perez';
+    this.customerData.email = 'juan@esencia.com';
+    this.continueToPayment();
+  }
+
   continueToPayment() {
-    if (!this.customerData.firstName || !this.customerData.lastName) return;
-    
     this.checkoutStep = 'payment';
     
-    // Agregamos un pequeño delay para que el contenedor exista en el DOM (ngIf / display block)
     setTimeout(() => {
       this.initMercadoPagoBrick();
     }, 100);
