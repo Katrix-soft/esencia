@@ -103,47 +103,59 @@ function mapCardFormDataToOrder(cardFormData) {
   return body;
 }
 
+// Helper para bypassear el SDK y hacer la petición directa
+async function createOrderDirect(orderBody) {
+  const response = await fetch('https://api.mercadopago.com/v1/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+      'X-Idempotency-Key': crypto.randomUUID()
+    },
+    body: JSON.stringify(orderBody)
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw err;
+  }
+  return response.json();
+}
+
 // ==========================================
 // 1. Endpoint Proxy para procesar el pago (Orders API)
 // ==========================================
 app.post('/api/pagos/v1/payments', async (req, res) => {
   try {
     const orderBody = mapCardFormDataToOrder(req.body);
-    console.log('Creando Order (v1/orders) en Mercado Pago:', JSON.stringify(orderBody, null, 2));
+    console.log('Creando Order (v1/orders) directa:', JSON.stringify(orderBody, null, 2));
 
-    const response = await orderAPI.create({ body: orderBody });
+    const response = await createOrderDirect(orderBody);
     res.status(201).json(response);
   } catch (error) {
-    console.error('Error al procesar la Order con MP:', JSON.stringify(error, null, 2));
+    console.error('Error al procesar la Order directa:', JSON.stringify(error, null, 2));
     res.status(500).json({ error: 'Error procesando el pago', details: error });
   }
 });
 
 // Endpoint adicional para el Card Payment Brick de Mercado Pago
-app.post('/process_payment', (req, res) => {
+app.post('/process_payment', async (req, res) => {
   try {
     const orderBody = mapCardFormDataToOrder(req.body);
-    console.log('Creando Order (process_payment) en Mercado Pago:', JSON.stringify(orderBody, null, 2));
+    console.log('Creando Order (process_payment) directa:', JSON.stringify(orderBody, null, 2));
 
-    orderAPI.create({ body: orderBody })
-      .then((response) => {
-        console.log('Respuesta de Order de MP:', response);
-        // El frontend espera el payment.id en caso de éxito para el Swal. Orders devuelve transactions.payments
-        let paymentId = response.id;
-        if (response.transactions && response.transactions.payments && response.transactions.payments.length > 0) {
-          paymentId = response.transactions.payments[0].id || response.id;
-        }
-        
-        // Enviamos la respuesta, el frontend extrae .id o .status
-        res.status(201).json({ ...response, id: paymentId });
-      })
-      .catch((error) => {
-        console.error('Error al crear la Order en MP:', JSON.stringify(error, null, 2));
-        res.status(500).json(error);
-      });
+    const response = await createOrderDirect(orderBody);
+    console.log('Respuesta de Order directa:', response);
+    // El frontend espera el payment.id en caso de éxito para el Swal
+    let paymentId = response.id;
+    if (response.transactions && response.transactions.payments && response.transactions.payments.length > 0) {
+      paymentId = response.transactions.payments[0].id || response.id;
+    }
+    
+    // Enviamos la respuesta, el frontend extrae .id o .status
+    res.status(201).json({ ...response, id: paymentId });
   } catch (error) {
-    console.error('Error interno al procesar pago:', error);
-    res.status(500).json({ error: 'Error procesando el pago', details: error.message });
+    console.error('Error al crear la Order directa:', error);
+    res.status(500).json(error);
   }
 });
 
