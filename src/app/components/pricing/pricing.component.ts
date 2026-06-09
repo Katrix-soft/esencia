@@ -31,7 +31,7 @@ declare var Swal: any;
               <p>Para emprendedores y perfumerías boutique iniciando su camino.</p>
             </div>
             <div class="price">
-              <span class="amount">$11.900</span>
+              <span class="amount">$200</span>
               <span class="period">/mes</span>
             </div>
             <ul class="features">
@@ -676,7 +676,7 @@ export class PricingComponent implements AfterViewInit {
                   resolve();
                 } else {
                   console.error('Pago rechazado o con error:', data);
-                  const errorMsg = data.message || data.status_detail || data.error || 'Error desconocido';
+                  const errorMsg = this.getMercadoPagoMessage(data.status, data.status_detail);
                   Swal.fire({
                     icon: 'error',
                     title: 'El pago no pudo ser procesado',
@@ -712,5 +712,64 @@ export class PricingComponent implements AfterViewInit {
     } catch (e) {
       console.error('Error al inicializar MP:', e);
     }
+  }
+
+  private getMercadoPagoMessage(status: string, statusDetail: string): string {
+    const dictionary: { [key: string]: string } = {
+      // Reembolsos y Cancelaciones
+      'partially_refunded': 'La transacción fue procesada con éxito y una parte del monto fue reembolsada.',
+      'refunded': 'La orden ha sido reembolsada. El monto ha sido devuelto íntegramente al pagador.',
+      'cancelled': 'La transacción fue cancelada y no será procesada.',
+      
+      // Contracargos
+      'in_process_charged_back': 'La transacción ha sufrido un contracargo y está en proceso de evaluación.',
+      'settled': 'La transacción ha sufrido un contracargo y el monto fue reembolsado.',
+      'reimbursed': 'La transacción ha sufrido un contracargo y el monto fue acreditado al vendedor.',
+      
+      // Rechazos por tarjeta o banco
+      'bad_filled_card_data': 'La transacción falló debido a datos de la tarjeta completados incorrectamente (ej. número de la tarjeta, CVV, fecha de vencimiento).',
+      'invalid_card_token': 'La transacción falló debido a un token de tarjeta inválido.',
+      'rejected_by_issuer': 'La transacción falló debido a un rechazo por parte del banco emisor de la tarjeta.',
+      'required_call_for_authorize': 'La transacción falló porque se requiere una llamada para autorización. El banco exige una verificación adicional.',
+      'card_disabled': 'La transacción falló debido a que la tarjeta está desactivada o bloqueada por el banco emisor.',
+      
+      // Rechazos de límite y saldo
+      'insufficient_amount': 'La transacción falló debido a un monto insuficiente. El saldo disponible no cubre el monto de la transacción.',
+      'card_insufficient_amount': 'La tarjeta elegida para la transacción no tiene fondos suficientes.',
+      'amount_limit_exceeded': 'La transacción falló debido a que se excedió el límite de monto permitido por tu tarjeta.',
+      'max_attempts_exceeded': 'La transacción falló debido a que se excedió el número máximo de intentos permitidos.',
+      
+      // Otros fallos
+      'high_risk': 'La transacción falló debido a un alto riesgo detectado por el sistema de seguridad.',
+      'processing_error': 'La transacción falló debido a un error de procesamiento o un problema técnico en el sistema.',
+      'invalid_installments': 'La transacción falló debido a cuotas inválidas. El número de cuotas seleccionadas no es aceptado por el emisor.',
+      
+      // Expiración y 3DS
+      'expired': 'La transacción ha expirado debido a que no se completó dentro del tiempo límite.',
+      '3ds_challenge_expired': 'La transacción falló debido a la expiración del tiempo para completar la autenticación 3DS.',
+      'pending_challenge': 'Transacción pendiente de autenticación. Posees hasta 40 minutos para completarlo.',
+      
+      // Action required
+      'waiting_payment': 'La transacción requiere una acción adicional y está esperando el pago.',
+      'waiting_capture': 'El pago ha sido autorizado pero está esperando ser capturado.',
+      'waiting_transfer': 'La transacción está esperando la transferencia de los fondos.',
+      
+      // Revisiones
+      'pending_review_manual': 'La transacción está en curso pero requiere una evaluación manual antes de continuar.',
+      'in_review': 'El pago está en análisis automático de riesgo y prevención de fraudes. No se requiere ninguna acción por ahora.'
+    };
+
+    // Algunos details pueden sobreescribirse si comparten nombre pero distinto status, 
+    // pero el dictionary cubre la mayoría de status_detail específicos.
+    if (dictionary[statusDetail]) {
+      return dictionary[statusDetail];
+    }
+    
+    // Fallbacks generales por status
+    if (status === 'rejected' || status === 'failed') {
+      return 'El pago fue rechazado. Verifica los datos de tu tarjeta o contacta a tu banco.';
+    }
+
+    return statusDetail || 'Ocurrió un error desconocido al procesar el pago.';
   }
 }
