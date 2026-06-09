@@ -83,6 +83,18 @@ function mapCardFormDataToOrder(cardFormData) {
     total_amount: amountStr,
     external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
     payer: payerObj,
+    additional_info: {
+      payer: {
+        registration_date: new Date().toISOString()
+      },
+      shipments: {
+        receivers_address: {
+          zip_code: '1425',
+          state_name: 'CABA',
+          city_name: 'Buenos Aires'
+        }
+      }
+    },
     items: [
       {
         title: planName,
