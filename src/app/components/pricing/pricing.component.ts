@@ -52,7 +52,7 @@ declare var Swal: any;
                 Datos seguros
               </li>
             </ul>
-            <button class="btn-outline active-scale" (click)="openPaymentModal('Semilla', 11900)">Elegir Semilla</button>
+            <button class="btn-outline active-scale" (click)="openPaymentModal('Semilla', 200)">Elegir Semilla</button>
           </div>
 
           <!-- Flor (featured) -->
