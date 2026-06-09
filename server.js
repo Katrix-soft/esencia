@@ -67,7 +67,6 @@ function mapCardFormDataToOrder(cardFormData) {
     processing_mode: 'automatic',
     total_amount: amountStr,
     external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
-    statement_descriptor: 'ESENCIATIENDA',
     payer: {
       email: email
     },
