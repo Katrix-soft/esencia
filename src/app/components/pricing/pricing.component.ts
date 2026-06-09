@@ -463,63 +463,73 @@ declare var Swal: any;
       margin-bottom: 1rem;
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .auth-container { display: flex; flex-direction: column; gap: 1.5rem; }
+    .auth-container { display: flex; flex-direction: column; gap: 1.5rem; padding: 0.5rem 0; }
     .auth-tabs {
       display: flex;
-      gap: 1.5rem;
-      border-bottom: 2px solid var(--color-surface-container-highest);
+      background: #f3f4f6;
+      border-radius: var(--radius-full);
+      padding: 0.35rem;
+      gap: 0;
     }
     .auth-tabs button {
-      background: none;
+      flex: 1;
+      background: transparent;
       border: none;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--color-on-surface-variant);
       cursor: pointer;
       padding: 0.75rem 0;
-      position: relative;
-      transition: color 0.3s ease;
-      width: auto;
-      border-radius: 0;
+      border-radius: var(--radius-full);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .auth-tabs button.active { color: var(--color-primary); }
-    .auth-tabs button.active::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--color-primary);
-      border-radius: 3px 3px 0 0;
+    .auth-tabs button.active { 
+      background: white;
+      color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     }
-    .auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
+    .auth-form { display: flex; flex-direction: column; gap: 1.25rem; padding-top: 0.5rem; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .animate-fade-in { animation: fadeIn 0.3s ease; }
-    .form-instructions { color: var(--color-on-surface-variant); font-size: 0.95rem; margin: 0; }
-    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-    .form-group label { font-weight: 600; font-size: 0.9rem; color: var(--color-on-background); }
+    .animate-fade-in { animation: fadeIn 0.4s ease; }
+    .form-instructions { color: var(--color-on-surface-variant); font-size: 0.95rem; margin: 0 0 0.5rem 0; line-height: 1.5; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group label { font-weight: 600; font-size: 0.85rem; color: var(--color-on-background); letter-spacing: 0.02em; }
     .form-control {
-      padding: 0.75rem 1rem;
-      border: 1px solid var(--color-surface-container-highest);
-      border-radius: 0.5rem;
-      background: var(--color-surface);
-      font-size: 1rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      background: #f9fafb;
+      font-size: 0.95rem;
+      color: #111827;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+      width: 100%;
     }
-    .form-control:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(74,124,89,0.1); }
+    .form-control::placeholder { color: #9ca3af; }
+    .form-control:focus { 
+      outline: none; 
+      background: white;
+      border-color: var(--color-primary); 
+      box-shadow: 0 0 0 4px rgba(74,124,89,0.1); 
+    }
     .form-continue-btn {
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       padding: 1rem;
-      border-radius: 0.5rem;
+      border-radius: 0.75rem;
       background: var(--color-primary) !important;
       color: var(--color-on-primary) !important;
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
-      transition: background 0.2s, opacity 0.2s;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(74,124,89,0.2);
     }
-    .form-continue-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .form-continue-btn:not(:disabled):hover { background: var(--color-secondary) !important; }
+    .form-continue-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    .form-continue-btn:not(:disabled):hover { 
+      background: var(--color-secondary) !important; 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(74,124,89,0.3);
+    }
   `]
 })
 export class PricingComponent implements AfterViewInit {
