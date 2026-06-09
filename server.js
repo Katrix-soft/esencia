@@ -61,28 +61,16 @@ function mapCardFormDataToOrder(cardFormData) {
   }
 
   const email = cardFormData.payer?.email || 'test@testuser.com';
-  const firstName = cardFormData.payer?.first_name || 'Juan';
-  const lastName = cardFormData.payer?.last_name || 'Perez';
-
-  const payerObj = {
-    email: email,
-    first_name: firstName,
-    last_name: lastName
-  };
-
-  if (cardFormData.payer?.identification) {
-    payerObj.identification = {
-      type: cardFormData.payer.identification.type || 'DNI',
-      number: cardFormData.payer.identification.number || ''
-    };
-  }
 
   const body = {
     type: 'online',
     processing_mode: 'automatic',
     total_amount: amountStr,
     external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
-    payer: payerObj,
+    statement_descriptor: 'ESENCIATIENDA',
+    payer: {
+      email: email
+    },
     items: [
       {
         title: planName,
