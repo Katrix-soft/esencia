@@ -443,7 +443,7 @@ export class PricingComponent implements AfterViewInit {
       // Pedimos la llave pública al backend dinámicamente
       const configRes = await fetch('/api/config');
       const configData = await configRes.json();
-      const publicKey = configData.publicKey || 'APP_USR-1c1ec552-cf16-4008-bcca-0d90e2baf8ff';
+      const publicKey = configData.publicKey || 'APP_USR-7de37b05-1fe7-4e28-b855-3aaafc4a96f4';
 
       const mp = new MercadoPago(publicKey, {
         locale: 'es-AR'
