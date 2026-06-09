@@ -1,5 +1,6 @@
 import { Component, AfterViewInit } from '@angular/core';
 import { NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ScrollRevealService } from '../../services/scroll-reveal.service';
 
 declare var MercadoPago: any;
@@ -8,7 +9,7 @@ declare var Swal: any;
 @Component({
   selector: 'app-pricing',
   standalone: true,
-  imports: [NgIf],
+  imports: [NgIf, FormsModule],
   template: `
     <section class="pricing-section" id="precios">
       <div class="dots-bg"></div>
@@ -142,15 +143,39 @@ declare var Swal: any;
           <div class="modal-header">
             <div class="modal-title">
               <span class="material-symbols-outlined shield-icon">security</span>
-              <h3>Pago Seguro</h3>
+              <h3>{{ checkoutStep === 'form' ? 'Datos de Compra' : 'Pago Seguro' }}</h3>
             </div>
             <button class="close-btn" (click)="closePaymentModal()">
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>
           
-          <div class="modal-body" id="paymentBrick_container">
-            <!-- El SDK de Mercado Pago renderizará aquí -->
+          <div class="modal-body">
+            
+            <!-- Paso 1: Datos Personales -->
+            <div *ngIf="checkoutStep === 'form'" class="checkout-form-step">
+              <p class="form-instructions">Completa tus datos para asociar la suscripción a tu cuenta.</p>
+              
+              <div class="form-group">
+                <label for="firstName">Nombre</label>
+                <input type="text" id="firstName" [(ngModel)]="customerData.firstName" placeholder="Ej. Juan" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="lastName">Apellido</label>
+                <input type="text" id="lastName" [(ngModel)]="customerData.lastName" placeholder="Ej. Perez" class="form-control">
+              </div>
+
+              <button class="btn-solid form-continue-btn active-scale" (click)="continueToPayment()" [disabled]="!customerData.firstName || !customerData.lastName">
+                Continuar al Pago
+              </button>
+            </div>
+
+            <!-- Paso 2: Mercado Pago Brick -->
+            <div [style.display]="checkoutStep === 'payment' ? 'block' : 'none'" id="paymentBrick_container">
+              <!-- El SDK de Mercado Pago renderizará aquí -->
+            </div>
+
           </div>
           
           <div class="success-overlay" *ngIf="paymentSuccess">
@@ -403,6 +428,61 @@ declare var Swal: any;
       margin-bottom: 1rem;
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ---- Pre-checkout Form Styles ---- */
+    .checkout-form-step {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .form-instructions {
+      color: var(--color-on-surface-variant);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .form-group label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--color-on-background);
+    }
+    .form-control {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--color-surface-container-highest);
+      border-radius: 0.5rem;
+      background: var(--color-surface);
+      color: var(--color-on-background);
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(74,124,89,0.1);
+    }
+    .form-continue-btn {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .form-continue-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .form-continue-btn:not(:disabled):hover {
+      background: var(--color-secondary);
+    }
   `]
 })
 export class PricingComponent implements AfterViewInit {
@@ -411,6 +491,13 @@ export class PricingComponent implements AfterViewInit {
   selectedPlan = '';
   selectedAmount = 0;
   paymentBrickController: any;
+
+  // Nuevas variables para el pre-checkout
+  checkoutStep: 'form' | 'payment' = 'form';
+  customerData = {
+    firstName: '',
+    lastName: ''
+  };
 
   constructor(private scrollReveal: ScrollRevealService) {}
   ngAfterViewInit(): void { this.scrollReveal.observeElements(); }
@@ -421,6 +508,22 @@ export class PricingComponent implements AfterViewInit {
     this.showPaymentModal = true;
     this.paymentSuccess = false;
     
+    // Al abrir, siempre mostramos primero el form y limpiamos datos
+    this.checkoutStep = 'form';
+    this.customerData = { firstName: '', lastName: '' };
+    
+    if (this.paymentBrickController) {
+      this.paymentBrickController.unmount();
+      this.paymentBrickController = null;
+    }
+  }
+
+  continueToPayment() {
+    if (!this.customerData.firstName || !this.customerData.lastName) return;
+    
+    this.checkoutStep = 'payment';
+    
+    // Agregamos un pequeño delay para que el contenedor exista en el DOM (ngIf / display block)
     setTimeout(() => {
       this.initMercadoPagoBrick();
     }, 100);
@@ -440,6 +543,7 @@ export class PricingComponent implements AfterViewInit {
         console.error('MercadoPago SDK not loaded');
         return;
       }
+
       // Pedimos la llave pública al backend dinámicamente
       const configRes = await fetch('/api/config');
       const configData = await configRes.json();
@@ -477,6 +581,12 @@ export class PricingComponent implements AfterViewInit {
           onSubmit: ({ selectedPaymentMethod, formData }: any) => {
             // callback llamado cuando el usuario haga clic en el botón enviar los datos
             return new Promise<void>((resolve, reject) => {
+              
+              // Inyectamos el nombre y apellido recolectado en el Paso 1
+              if (!formData.payer) formData.payer = {};
+              formData.payer.first_name = this.customerData.firstName;
+              formData.payer.last_name = this.customerData.lastName;
+
               fetch("/process_payment", {
                 method: "POST",
                 headers: {
