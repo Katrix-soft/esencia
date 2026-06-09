@@ -26,16 +26,20 @@ function mapCardFormDataToOrder(cardFormData) {
   const amountStr = String(cardFormData.transaction_amount);
   
   // Determinar si es tarjeta de crédito, débito o ticket
-  let paymentMethodType = 'credit_card';
-  if (cardFormData.payment_method_id && (
-    cardFormData.payment_method_id.includes('debit') ||
-    cardFormData.payment_method_id.includes('maestro') ||
-    cardFormData.payment_method_id.includes('visa_electron') ||
-    cardFormData.payment_method_id.includes('cabald')
-  )) {
-    paymentMethodType = 'debit_card';
-  } else if (cardFormData.payment_method_id === 'rapipago' || cardFormData.payment_method_id === 'pagofacil') {
-    paymentMethodType = 'ticket';
+  let paymentMethodType = cardFormData.payment_method_type;
+  if (!paymentMethodType) {
+    paymentMethodType = 'credit_card';
+    if (cardFormData.payment_method_id && (
+      cardFormData.payment_method_id.includes('debit') ||
+      cardFormData.payment_method_id.includes('deb') ||
+      cardFormData.payment_method_id.includes('maestro') ||
+      cardFormData.payment_method_id.includes('visa_electron') ||
+      cardFormData.payment_method_id.includes('cabal')
+    )) {
+      paymentMethodType = 'debit_card';
+    } else if (cardFormData.payment_method_id === 'rapipago' || cardFormData.payment_method_id === 'pagofacil') {
+      paymentMethodType = 'ticket';
+    }
   }
 
   const payer = {
