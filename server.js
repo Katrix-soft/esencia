@@ -83,18 +83,6 @@ function mapCardFormDataToOrder(cardFormData) {
     total_amount: amountStr,
     external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
     payer: payerObj,
-    additional_info: {
-      payer: {
-        registration_date: new Date().toISOString()
-      },
-      shipments: {
-        receivers_address: {
-          zip_code: '1425',
-          state_name: 'CABA',
-          city_name: 'Buenos Aires'
-        }
-      }
-    },
     items: [
       {
         title: planName,
@@ -136,7 +124,7 @@ async function createOrderDirect(orderBody) {
 app.post('/api/pagos/v1/payments', async (req, res) => {
   try {
     const orderBody = mapCardFormDataToOrder(req.body);
-    console.log('Creando Order (v1/orders) directa:', JSON.stringify(orderBody, null, 2));
+    console.log('Creando Order (v1/orders) directa:', new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }), '\n', JSON.stringify(orderBody, null, 2));
 
     const response = await createOrderDirect(orderBody);
     res.status(201).json(response);
@@ -150,7 +138,7 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
 app.post('/process_payment', async (req, res) => {
   try {
     const orderBody = mapCardFormDataToOrder(req.body);
-    console.log('Creando Order (process_payment) directa:', JSON.stringify(orderBody, null, 2));
+    console.log('Creando Order (process_payment) directa:', new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }), '\n', JSON.stringify(orderBody, null, 2));
 
     const response = await createOrderDirect(orderBody);
     console.log('Respuesta de Order directa:', response);
@@ -163,7 +151,7 @@ app.post('/process_payment', async (req, res) => {
     // Enviamos la respuesta, el frontend extrae .id o .status
     res.status(201).json({ ...response, id: paymentId });
   } catch (error) {
-    console.error('Error al crear la Order directa:', error);
+    console.error('Error al crear la Order directa:', JSON.stringify(error, null, 2));
     res.status(500).json(error);
   }
 });
