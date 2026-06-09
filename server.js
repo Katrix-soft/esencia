@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
-const { MercadoPagoConfig, Order, Payment } = require('mercadopago');
+const { MercadoPagoConfig, Payment } = require('mercadopago');
 
 // Cargar variables de entorno si existe el archivo .env (útil en dev)
 require('dotenv').config();
@@ -15,7 +15,6 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '' 
 });
 const payment = new Payment(client);
-const order = new Order(client);
 
 app.use(cors());
 app.use(express.json());
@@ -59,7 +58,7 @@ function mapCardFormDataToPayment(cardFormData) {
     payer.identification = cardFormData.payer.identification;
   }
 
-  // Items para la información adicional
+  // Items para la información adicional (sin external_code, unit_price es un número)
   const items = [
     {
       id: cardFormData.plan_name ? `plan_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'plan_esencial',
@@ -67,12 +66,11 @@ function mapCardFormDataToPayment(cardFormData) {
       description: `Suscripción al ${planName} de Esencia`,
       quantity: 1,
       unit_price: planPrice,
-      category_id: 'services',
-      external_code: cardFormData.plan_name ? `code_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'code_plan_esencial'
+      category_id: 'services'
     }
   ];
 
-  // Información adicional completa para homologación
+  // Información adicional completa para homologación (sin receivers_address duplicado, solo receiver_address)
   const additional_info = {
     items,
     payer: {
@@ -89,13 +87,6 @@ function mapCardFormDataToPayment(cardFormData) {
     },
     shipments: {
       receiver_address: {
-        zip_code: '1425',
-        state_name: 'CABA',
-        city_name: 'Buenos Aires',
-        street_name: 'Av. Santa Fe',
-        street_number: 3000
-      },
-      receivers_address: {
         zip_code: '1425',
         state_name: 'CABA',
         city_name: 'Buenos Aires',
@@ -124,7 +115,6 @@ function mapCardFormDataToPayment(cardFormData) {
 
   return body;
 }
-
 
 // ==========================================
 // 1. Endpoint Proxy para procesar el pago
@@ -163,7 +153,6 @@ app.post('/process_payment', (req, res) => {
   }
 });
 
-
 // ==========================================
 // 2. Webhook de Mercado Pago
 // ==========================================
@@ -198,48 +187,30 @@ app.post('/webhook', async (req, res) => {
 
       if (sha !== hash) {
         console.warn('Webhook MP: Validación de firma fallida', { manifest, generated: sha, received: hash });
-        // Seguimos adelante y devolvemos 200 de todas formas para que MP no marque error
       } else {
         console.log('Webhook MP: Validación de firma exitosa.');
       }
     }
 
-    // Consultar el detalle del recurso si es un order o payment
-    if (dataId && dataId !== '123456') {
-      if (type === 'order') {
-        try {
-          const orderDetails = await order.get({ id: dataId });
-          console.log(`Detalles de la Orden ${dataId} obtenidos con éxito:`, {
-            status: orderDetails.status,
-            status_detail: orderDetails.status_detail,
-            total_amount: orderDetails.total_amount,
-            external_reference: orderDetails.external_reference,
-          });
-          // AQUÍ PUEDES ACTUALIZAR TU BASE DE DATOS
-        } catch (e) {
-          console.error('Error al obtener detalles de la Orden en Webhook:', e);
-        }
-      } else if (type === 'payment') {
-        try {
-          const paymentDetails = await payment.get({ id: dataId });
-          console.log(`Detalles del pago ${dataId} obtenidos con éxito:`, {
-            status: paymentDetails.status,
-            status_detail: paymentDetails.status_detail,
-            transaction_amount: paymentDetails.transaction_amount,
-          });
-          // AQUÍ PUEDES ACTUALIZAR TU BASE DE DATOS
-        } catch (e) {
-          console.error('Error al obtener detalles del pago en Webhook:', e);
-        }
+    // Consultar el detalle del recurso si es un payment
+    if (dataId && type === 'payment' && dataId !== '123456') {
+      try {
+        const paymentDetails = await payment.get({ id: dataId });
+        console.log(`Detalles del pago ${dataId} obtenidos con éxito:`, {
+          status: paymentDetails.status,
+          status_detail: paymentDetails.status_detail,
+          transaction_amount: paymentDetails.transaction_amount,
+        });
+      } catch (e) {
+        console.error('Error al obtener detalles del pago en Webhook:', e);
       }
     }
 
-    // IMPORTANTE: siempre responder 200 OK a Mercado Pago
+    // RESPONDER SIEMPRE 200 OK a Mercado Pago
     return res.status(200).json({ status: 'recibido' });
 
   } catch (error) {
     console.error('Error general en webhook:', error);
-    // Para asegurar que MP no reintente infinitamente en caso de bug interno
     return res.status(200).json({ status: 'error interno ignorado' });
   }
 });
@@ -259,7 +230,6 @@ app.get('/api/config', (req, res) => {
 const distPath = path.join(__dirname, 'dist/esencia-app/browser');
 app.use(express.static(distPath));
 
-// Rutas SPA (Redirigir todo al index.html si no es un archivo ni API)
 app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
