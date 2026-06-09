@@ -139,7 +139,7 @@ declare var Swal: any;
 
       <!-- Payment Modal -->
       <div class="payment-modal-overlay" *ngIf="showPaymentModal" (click)="closePaymentModal()">
-        <div class="payment-modal-box" (click)="$event.stopPropagation()">
+        <div class="payment-modal-box" [style.background]="checkoutStep === 'payment' ? '#ffffff' : ''" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <div class="modal-title">
               <span class="material-symbols-outlined shield-icon">security</span>
@@ -150,7 +150,7 @@ declare var Swal: any;
             </button>
           </div>
           
-          <div class="modal-body">
+          <div class="modal-body" [class.no-padding]="checkoutStep === 'payment'">
             
             <!-- Auth Layout -->
             <div *ngIf="checkoutStep === 'login' || checkoutStep === 'register'" class="auth-container">
@@ -427,7 +427,12 @@ declare var Swal: any;
       overflow-y: auto;
       box-shadow: 0 20px 40px rgba(0,0,0,0.2);
       position: relative;
+      transition: background-color 0.3s ease;
     }
+    .payment-modal-box::-webkit-scrollbar { width: 6px; }
+    .payment-modal-box::-webkit-scrollbar-track { background: transparent; }
+    .payment-modal-box::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .payment-modal-box::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     .modal-header {
       display: flex;
       justify-content: space-between;
@@ -443,6 +448,7 @@ declare var Swal: any;
       display: flex; align-items: center; justify-content: center;
     }
     .modal-body { padding: 1.5rem; min-height: 300px; }
+    .modal-body.no-padding { padding: 0; background: #ffffff; border-radius: 0 0 1.5rem 1.5rem; }
     .success-overlay {
       position: absolute;
       inset: 0;
