@@ -21,8 +21,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Función helper para mapear los datos del frontend (Payment Brick) al formato de Orders (Modo Automático)
-function mapCardFormDataToOrder(cardFormData) {
+// Función helper para mapear los datos del frontend (Payment Brick) al formato de Payments (Checkout API estándar)
+function mapCardFormDataToPayment(cardFormData) {
   const amountStr = String(cardFormData.transaction_amount);
   const planName = cardFormData.plan_name || 'Plan Esencial';
   const planPrice = Number(cardFormData.plan_price || cardFormData.transaction_amount || 11900);
@@ -44,56 +44,85 @@ function mapCardFormDataToOrder(cardFormData) {
     }
   }
 
-  // Items (en la raíz de la Order, sin id ni currency_id, y unit_price como string)
-  const items = [
-    {
-      title: planName,
-      description: `Suscripción al ${planName} de Esencia`,
-      quantity: 1,
-      unit_price: String(planPrice),
-      category_id: 'services',
-      external_code: cardFormData.plan_name ? `code_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'code_plan_esencial'
-    }
-  ];
-
-  // Payer (en la raíz de la Order, sin phone, solo email e identificación)
+  // Payer detallado (obligatorio y recomendado para homologación de Payments)
   const payer = {
-    email: cardFormData.payer?.email || 'test@testuser.com'
+    email: cardFormData.payer?.email || 'test@testuser.com',
+    first_name: cardFormData.payer?.first_name || 'Juan',
+    last_name: cardFormData.payer?.last_name || 'Perez',
+    phone: {
+      area_code: cardFormData.payer?.phone?.area_code || '11',
+      number: cardFormData.payer?.phone?.number || '1543210987'
+    }
   };
 
   if (cardFormData.payer?.identification) {
     payer.identification = cardFormData.payer.identification;
   }
 
-  // Objeto de transacción de Pago limpio y válido para la Orders API
-  const paymentObj = {
-    amount: amountStr,
-    payment_method: {
-      id: cardFormData.payment_method_id,
-      type: paymentMethodType
+  // Items para la información adicional
+  const items = [
+    {
+      id: cardFormData.plan_name ? `plan_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'plan_esencial',
+      title: planName,
+      description: `Suscripción al ${planName} de Esencia`,
+      quantity: 1,
+      unit_price: planPrice,
+      category_id: 'services',
+      external_code: cardFormData.plan_name ? `code_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'code_plan_esencial'
+    }
+  ];
+
+  // Información adicional completa para homologación
+  const additional_info = {
+    items,
+    payer: {
+      first_name: cardFormData.payer?.first_name || 'Juan',
+      last_name: cardFormData.payer?.last_name || 'Perez',
+      phone: {
+        area_code: cardFormData.payer?.phone?.area_code || '11',
+        number: cardFormData.payer?.phone?.number || '1543210987'
+      },
+      registration_date: new Date().toISOString(),
+      authentication_type: 'email',
+      last_purchase: new Date().toISOString(),
+      is_first_purchase_online: true
+    },
+    shipments: {
+      receiver_address: {
+        zip_code: '1425',
+        state_name: 'CABA',
+        city_name: 'Buenos Aires',
+        street_name: 'Av. Santa Fe',
+        street_number: 3000
+      },
+      receivers_address: {
+        zip_code: '1425',
+        state_name: 'CABA',
+        city_name: 'Buenos Aires',
+        street_name: 'Av. Santa Fe',
+        street_number: 3000
+      }
     }
   };
 
-  // Solo agregar token e installments si existen (para tarjetas)
+  const body = {
+    transaction_amount: Number(amountStr),
+    description: `Suscripción al ${planName} de Esencia`,
+    payment_method_id: cardFormData.payment_method_id,
+    payer,
+    statement_descriptor: 'ESENCIA',
+    additional_info,
+    external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`
+  };
+
   if (cardFormData.token) {
-    paymentObj.payment_method.token = cardFormData.token;
+    body.token = cardFormData.token;
   }
   if (cardFormData.installments) {
-    paymentObj.payment_method.installments = Number(cardFormData.installments);
+    body.installments = Number(cardFormData.installments);
   }
 
-  return {
-    type: 'online',
-    processing_mode: 'automatic',
-    external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
-    total_amount: amountStr,
-    statement_descriptor: 'ESENCIA',
-    items,
-    payer,
-    transactions: {
-      payments: [paymentObj]
-    }
-  };
+  return body;
 }
 
 
@@ -102,13 +131,13 @@ function mapCardFormDataToOrder(cardFormData) {
 // ==========================================
 app.post('/api/pagos/v1/payments', async (req, res) => {
   try {
-    const orderBody = mapCardFormDataToOrder(req.body);
-    console.log('Creando Order (v1/payments) en Mercado Pago:', JSON.stringify(orderBody, null, 2));
+    const paymentBody = mapCardFormDataToPayment(req.body);
+    console.log('Creando Pago (v1/payments) en Mercado Pago:', JSON.stringify(paymentBody, null, 2));
 
-    const response = await order.create({ body: orderBody });
+    const response = await payment.create({ body: paymentBody });
     res.status(201).json(response);
   } catch (error) {
-    console.error('Error al procesar la Order con MP:', JSON.stringify(error, null, 2));
+    console.error('Error al procesar el Pago con MP:', JSON.stringify(error, null, 2));
     res.status(500).json({ error: 'Error procesando el pago', details: error });
   }
 });
@@ -116,16 +145,16 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
 // Endpoint adicional para el Card Payment Brick de Mercado Pago
 app.post('/process_payment', (req, res) => {
   try {
-    const orderBody = mapCardFormDataToOrder(req.body);
-    console.log('Creando Order (process_payment) en Mercado Pago:', JSON.stringify(orderBody, null, 2));
+    const paymentBody = mapCardFormDataToPayment(req.body);
+    console.log('Creando Pago (process_payment) en Mercado Pago:', JSON.stringify(paymentBody, null, 2));
 
-    order.create({ body: orderBody })
+    payment.create({ body: paymentBody })
       .then((response) => {
-        console.log('Respuesta de Order de MP:', response);
+        console.log('Respuesta de Pago de MP:', response);
         res.status(201).json(response);
       })
       .catch((error) => {
-        console.error('Error al crear la Order en MP:', JSON.stringify(error, null, 2));
+        console.error('Error al crear el Pago en MP:', JSON.stringify(error, null, 2));
         res.status(500).json(error);
       });
   } catch (error) {
