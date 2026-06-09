@@ -44,7 +44,7 @@ function mapCardFormDataToOrder(cardFormData) {
     }
   }
 
-  // Items para la información adicional del pago
+  // Items (en la raíz de la Order)
   const items = [
     {
       id: cardFormData.plan_name ? `plan_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'plan_esencial',
@@ -58,8 +58,8 @@ function mapCardFormDataToOrder(cardFormData) {
     }
   ];
 
-  // Payer detallado para el pago
-  const detailedPayer = {
+  // Payer detallado (en la raíz de la Order)
+  const payer = {
     email: cardFormData.payer?.email || 'test@testuser.com',
     phone: {
       area_code: cardFormData.payer?.phone?.area_code || '11',
@@ -68,59 +68,33 @@ function mapCardFormDataToOrder(cardFormData) {
   };
 
   if (cardFormData.payer?.first_name) {
-    detailedPayer.first_name = cardFormData.payer.first_name;
+    payer.first_name = cardFormData.payer.first_name;
   }
   if (cardFormData.payer?.last_name) {
-    detailedPayer.last_name = cardFormData.payer.last_name;
+    payer.last_name = cardFormData.payer.last_name;
   }
   if (cardFormData.payer?.identification) {
-    detailedPayer.identification = cardFormData.payer.identification;
+    payer.identification = cardFormData.payer.identification;
   }
 
-  // Información adicional del pago
-  const additionalInfo = {
-    items: items,
-    payer: {
-      phone: {
-        area_code: cardFormData.payer?.phone?.area_code || '11',
-        number: cardFormData.payer?.phone?.number || '1543210987'
-      },
-      authentication_type: 'email',
-      last_purchase: new Date().toISOString(),
-      is_first_purchase_online: true
-    },
-    shipment: {
-      express_shipments: true
-    },
-    shipments: {
-      express_shipments: true,
-      receiver_address: {
-        zip_code: '1425',
-        state_name: 'CABA',
-        city_name: 'Buenos Aires',
-        street_name: 'Av. Santa Fe',
-        street_number: 3000
-      },
-      receivers_address: {
-        zip_code: '1425',
-        state_name: 'CABA',
-        city_name: 'Buenos Aires',
-        street_name: 'Av. Santa Fe',
-        street_number: 3000
-      }
+  // Shipments (en la raíz de la Order)
+  const shipments = {
+    receiver_address: {
+      zip_code: '1425',
+      state_name: 'CABA',
+      city_name: 'Buenos Aires',
+      street_name: 'Av. Santa Fe',
+      street_number: 3000
     }
   };
 
-  // Objeto de transacción de Pago (que va dentro de la Order)
+  // Objeto de transacción de Pago limpio y válido para la Orders API
   const paymentObj = {
     amount: amountStr,
     payment_method: {
       id: cardFormData.payment_method_id,
       type: paymentMethodType
-    },
-    statement_descriptor: 'ESENCIA',
-    payer: detailedPayer,
-    additional_info: additionalInfo
+    }
   };
 
   // Solo agregar token e installments si existen (para tarjetas)
@@ -131,20 +105,14 @@ function mapCardFormDataToOrder(cardFormData) {
     paymentObj.payment_method.installments = Number(cardFormData.installments);
   }
 
-  // Payer básico para la raíz de la Order (que no tire error por propiedades no soportadas)
-  const rootPayer = {
-    email: cardFormData.payer?.email || 'test@testuser.com'
-  };
-  if (cardFormData.payer?.identification) {
-    rootPayer.identification = cardFormData.payer.identification;
-  }
-
   return {
     type: 'online',
     processing_mode: 'automatic',
     external_reference: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
     total_amount: amountStr,
-    payer: rootPayer,
+    items,
+    payer,
+    shipments,
     transactions: {
       payments: [paymentObj]
     }
