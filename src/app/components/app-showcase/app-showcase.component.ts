@@ -48,6 +48,7 @@ import { ScrollRevealService } from '../../services/scroll-reveal.service';
               [src]="tabs[activeTab].img"
               [alt]="tabs[activeTab].alt"
               class="screenshot-img"
+              loading="lazy"
             />
           </div>
         </div>
@@ -106,7 +107,7 @@ export class AppShowcaseComponent implements AfterViewInit {
   tabs = [
     {
       url: 'app.esencia.io/dashboard',
-      img: 'assets/dashboard-screenshot.png',
+      img: 'assets/dashboard-screenshot.webp',
       alt: 'Dashboard de Esencia con métricas de ventas',
       feats: [
         { icon: 'insights', title: 'Analítica en Tiempo Real', desc: 'KPIs actualizados al instante sin recargar la página.' },
@@ -116,7 +117,7 @@ export class AppShowcaseComponent implements AfterViewInit {
     },
     {
       url: 'app.esencia.io/crm/clientes',
-      img: 'assets/crm-screenshot.png',
+      img: 'assets/crm-screenshot.webp',
       alt: 'Perfil olfativo de cliente en el CRM de Esencia',
       feats: [
         { icon: 'psychology', title: 'Perfil Olfativo IA', desc: 'Construido automáticamente desde cada interacción.' },
@@ -126,7 +127,7 @@ export class AppShowcaseComponent implements AfterViewInit {
     },
     {
       url: 'app.esencia.io/catalogo',
-      img: 'assets/catalog-screenshot.png',
+      img: 'assets/catalog-screenshot.webp',
       alt: 'Catálogo digital de fragancias con filtros y precios',
       feats: [
         { icon: 'tune', title: 'Filtros por Notas', desc: 'Salida, corazón y fondo — la forma natural de buscar perfumes.' },

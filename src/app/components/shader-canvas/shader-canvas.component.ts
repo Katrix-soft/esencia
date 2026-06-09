@@ -1,10 +1,10 @@
 import {
   Component,
   ElementRef,
-  OnInit,
   OnDestroy,
   ViewChild,
   AfterViewInit,
+  HostListener,
 } from '@angular/core';
 
 @Component({
@@ -93,6 +93,7 @@ export class ShaderCanvasComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.initWebGL();
+    this.resizeCanvas();
     if (!this.isReducedMotion) {
       this.animFrameId = requestAnimationFrame(t => this.render(t));
     } else {
@@ -102,6 +103,30 @@ export class ShaderCanvasComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.animFrameId !== null) cancelAnimationFrame(this.animFrameId);
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.resizeCanvas();
+  }
+
+  private resizeCanvas(): void {
+    const canvas = this.canvasRef?.nativeElement;
+    const gl = this.gl;
+    if (!canvas || !gl) return;
+
+    // Escalamos el canvas al 50% de la resolución.
+    // Al ser un fondo de ruido muy suave, la interpolación bilineal del navegador lo estira
+    // manteniendo la fluidez visual pero reduciendo el procesamiento gráfico en un 75%.
+    const scale = 0.5;
+    const targetWidth = Math.floor(window.innerWidth * scale);
+    const targetHeight = Math.floor(window.innerHeight * scale);
+
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
   }
 
   private initWebGL(): void {
@@ -142,9 +167,6 @@ export class ShaderCanvasComponent implements AfterViewInit, OnDestroy {
     const canvas = this.canvasRef?.nativeElement;
     if (!gl || !canvas) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniform2f(this.resolutionLocation, canvas.width, canvas.height);
     gl.uniform1f(this.timeLocation, (this.isReducedMotion ? 1000 : time) * 0.001);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -154,3 +176,4 @@ export class ShaderCanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 }
+

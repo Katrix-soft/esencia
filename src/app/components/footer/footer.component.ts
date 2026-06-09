@@ -8,7 +8,7 @@ import { Component } from '@angular/core';
       <div class="footer-top">
         <div class="footer-brand">
           <div class="footer-logo">
-            <img src="assets/Esencia.png" alt="Esencia" class="logo-img" />
+            <img src="assets/Esencia.webp" alt="Esencia" class="logo-img" loading="lazy" />
           </div>
           <p class="footer-tagline">Un producto de <a href="https://katrix.com.ar" target="_blank" rel="noopener" class="katrix-link">Katrix</a></p>
         </div>

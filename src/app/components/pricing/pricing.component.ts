@@ -3,6 +3,7 @@ import { NgIf } from '@angular/common';
 import { ScrollRevealService } from '../../services/scroll-reveal.service';
 
 declare var MercadoPago: any;
+declare var Swal: any;
 
 @Component({
   selector: 'app-pricing',
@@ -148,7 +149,7 @@ declare var MercadoPago: any;
             </button>
           </div>
           
-          <div class="modal-body" id="cardPaymentBrick_container">
+          <div class="modal-body" id="paymentBrick_container">
             <!-- El SDK de Mercado Pago renderizará aquí -->
           </div>
           
@@ -463,6 +464,9 @@ export class PricingComponent implements AfterViewInit {
             },
           },
           paymentMethods: {
+            creditCard: 'all',
+            debitCard: 'all',
+            ticket: 'all',
             maxInstallments: 1,
           },
         },
@@ -470,7 +474,7 @@ export class PricingComponent implements AfterViewInit {
           onReady: () => {
             // callback llamado cuando Brick esté listo
           },
-          onSubmit: (cardFormData: any) => {
+          onSubmit: ({ selectedPaymentMethod, formData }: any) => {
             // callback llamado cuando el usuario haga clic en el botón enviar los datos
             return new Promise<void>((resolve, reject) => {
               fetch("/process_payment", {
@@ -478,40 +482,76 @@ export class PricingComponent implements AfterViewInit {
                 headers: {
                   "Content-Type": "application/json",
                 },
-                body: JSON.stringify(cardFormData)
+                body: JSON.stringify(formData)
               })
               .then((response) => response.json())
               .then((data) => {
-                if (data.status === 'approved' || data.status === 'in_process') {
+                const isSuccess = data.status === 'processed' || data.status === 'approved' || data.status === 'in_process';
+                const isTicketPending = selectedPaymentMethod === 'ticket' && data.status === 'pending';
+
+                if (isSuccess || isTicketPending) {
                   this.paymentSuccess = true;
-                  // MOSTRAR ORDER ID PARA HOMOLOGACIÓN
-                  alert(`¡Pago procesado con éxito!\n\nTu Order ID de prueba es: ${data.id}`);
+                  
+                  if (selectedPaymentMethod === 'ticket') {
+                    // Extraer url del cupón
+                    let ticketUrl = data.external_resource_url;
+                    if (!ticketUrl && data.payments && data.payments.length > 0) {
+                      ticketUrl = data.payments[0].external_resource_url;
+                    }
+                    if (!ticketUrl && data.transactions?.payments?.length > 0) {
+                      ticketUrl = data.transactions.payments[0].external_resource_url;
+                    }
+                    
+                    Swal.fire({
+                      icon: 'info',
+                      title: '¡Cupón generado con éxito!',
+                      html: `<p>Para completar tu suscripción de <strong>${this.selectedPlan}</strong>, debes abonar en Rapipago o Pago Fácil.</p>
+                             <p>Tu Order ID de prueba es: <strong>${data.id}</strong></p>
+                             ${ticketUrl ? `<a href="${ticketUrl}" target="_blank" style="display:inline-block;padding:12px 24px;background:#4a7c59;color:white;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:15px;">Ver Cupón de Pago</a>` : ''}`,
+                      confirmButtonColor: '#4a7c59'
+                    });
+                  } else {
+                    Swal.fire({
+                      icon: 'success',
+                      title: '¡Pago procesado con éxito!',
+                      text: `Tu Order ID de prueba es: ${data.id}`,
+                      confirmButtonColor: '#4a7c59'
+                    });
+                  }
                   resolve();
                 } else {
                   console.error('Pago rechazado o con error:', data);
                   const errorMsg = data.message || data.status_detail || data.error || 'Error desconocido';
-                  alert('El pago no pudo ser procesado:\n' + errorMsg);
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'El pago no pudo ser procesado',
+                    text: errorMsg,
+                    confirmButtonColor: '#d33'
+                  });
                   reject();
                 }
               })
               .catch((error) => {
-                // tratar respuesta de error al intentar crear el pago
                 console.error('Error enviando pago:', error);
-                alert('Ocurrió un error al procesar el pago.');
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Ocurrió un error',
+                  text: 'No se pudo conectar con el servidor para procesar el pago.',
+                  confirmButtonColor: '#d33'
+                });
                 reject();
               });
             });
           },
           onError: (error: any) => {
-            // callback llamado para todos los casos de error de Brick
             console.error('MP Brick Error:', error);
           },
         },
       };
 
       this.paymentBrickController = await bricksBuilder.create(
-        'cardPayment',
-        'cardPaymentBrick_container',
+        'payment',
+        'paymentBrick_container',
         settings
       );
     } catch (e) {
