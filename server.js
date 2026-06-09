@@ -44,49 +44,26 @@ function mapCardFormDataToOrder(cardFormData) {
     }
   }
 
-  // Items (en la raíz de la Order)
+  // Items (en la raíz de la Order, sin id ni currency_id, y unit_price como string)
   const items = [
     {
-      id: cardFormData.plan_name ? `plan_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'plan_esencial',
       title: planName,
       description: `Suscripción al ${planName} de Esencia`,
       quantity: 1,
-      unit_price: planPrice,
-      currency_id: 'ARS',
+      unit_price: String(planPrice),
       category_id: 'services',
       external_code: cardFormData.plan_name ? `code_${cardFormData.plan_name.toLowerCase().replace(/\s+/g, '_')}` : 'code_plan_esencial'
     }
   ];
 
-  // Payer detallado (en la raíz de la Order)
+  // Payer (en la raíz de la Order, sin phone, solo email e identificación)
   const payer = {
-    email: cardFormData.payer?.email || 'test@testuser.com',
-    phone: {
-      area_code: cardFormData.payer?.phone?.area_code || '11',
-      number: cardFormData.payer?.phone?.number || '1543210987'
-    }
+    email: cardFormData.payer?.email || 'test@testuser.com'
   };
 
-  if (cardFormData.payer?.first_name) {
-    payer.first_name = cardFormData.payer.first_name;
-  }
-  if (cardFormData.payer?.last_name) {
-    payer.last_name = cardFormData.payer.last_name;
-  }
   if (cardFormData.payer?.identification) {
     payer.identification = cardFormData.payer.identification;
   }
-
-  // Shipments (en la raíz de la Order)
-  const shipments = {
-    receiver_address: {
-      zip_code: '1425',
-      state_name: 'CABA',
-      city_name: 'Buenos Aires',
-      street_name: 'Av. Santa Fe',
-      street_number: 3000
-    }
-  };
 
   // Objeto de transacción de Pago limpio y válido para la Orders API
   const paymentObj = {
@@ -112,7 +89,6 @@ function mapCardFormDataToOrder(cardFormData) {
     total_amount: amountStr,
     items,
     payer,
-    shipments,
     transactions: {
       payments: [paymentObj]
     }
