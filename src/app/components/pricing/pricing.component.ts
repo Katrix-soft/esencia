@@ -2,6 +2,7 @@ import { Component, AfterViewInit } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ScrollRevealService } from '../../services/scroll-reveal.service';
+import { AuthService } from '../../services/auth.service';
 
 declare var MercadoPago: any;
 declare var Swal: any;
@@ -31,7 +32,7 @@ declare var Swal: any;
               <p>Para emprendedores y perfumerías boutique iniciando su camino.</p>
             </div>
             <div class="price">
-              <span class="amount">$200</span>
+              <span class="amount">$20</span>
               <span class="period">/mes</span>
             </div>
             <ul class="features">
@@ -52,7 +53,7 @@ declare var Swal: any;
                 Datos seguros
               </li>
             </ul>
-            <button class="btn-outline active-scale" (click)="openPaymentModal('Semilla', 200)">Elegir Semilla</button>
+            <button class="btn-outline active-scale" (click)="openPaymentModal('Semilla', 20)">Elegir Semilla</button>
           </div>
 
           <!-- Flor (featured) -->
@@ -161,17 +162,17 @@ declare var Swal: any;
 
               <!-- Login Form -->
               <div *ngIf="checkoutStep === 'login'" class="auth-form animate-fade-in">
-                <p class="form-instructions">Ingresa a tu cuenta para continuar con la compra.</p>
+                <p class="form-instructions">Ingresa a tu cuenta para gestionar tu negocio o continuar con la compra.</p>
                 <div class="form-group">
                   <label for="loginEmail">Email</label>
-                  <input type="email" id="loginEmail" placeholder="tu@email.com" class="form-control">
+                  <input type="email" id="loginEmail" [(ngModel)]="loginEmail" placeholder="tu@email.com" class="form-control">
                 </div>
                 <div class="form-group">
                   <label for="loginPass">Contraseña</label>
-                  <input type="password" id="loginPass" placeholder="••••••••" class="form-control">
+                  <input type="password" id="loginPass" [(ngModel)]="loginPassword" placeholder="••••••••" class="form-control">
                 </div>
-                <button class="btn-solid form-continue-btn active-scale" (click)="simulateLogin()">
-                  Iniciar Sesión y Pagar
+                <button class="btn-solid form-continue-btn active-scale" (click)="simulateLogin()" [disabled]="!loginEmail">
+                  Iniciar Sesión
                 </button>
               </div>
 
@@ -199,9 +200,14 @@ declare var Swal: any;
                   <input type="password" id="regPass" placeholder="Mínimo 8 caracteres" class="form-control">
                 </div>
 
+                <div class="form-group">
+                  <label for="storeName">Nombre de tu Tienda</label>
+                  <input type="text" id="storeName" [(ngModel)]="customerData.storeName" (ngModelChange)="onStoreNameChange($event)" placeholder="Ej. Mi Perfumería" class="form-control">
+                </div>
+
                 <button class="btn-solid form-continue-btn active-scale" 
                         (click)="continueToPayment()" 
-                        [disabled]="!customerData.firstName || !customerData.lastName || !customerData.email">
+                        [disabled]="!customerData.firstName || !customerData.lastName || !customerData.email || !customerData.storeName">
                   Crear Cuenta y Continuar
                 </button>
               </div>
@@ -216,8 +222,20 @@ declare var Swal: any;
           
           <div class="success-overlay" *ngIf="paymentSuccess">
             <span class="material-symbols-outlined check-icon">check_circle</span>
-            <h3>¡Pago Exitoso!</h3>
-            <p>Gracias por suscribirte al plan {{ selectedPlan }}.</p>
+            <h3 style="font-size: 1.5rem; color: #2e3230; font-weight: 700; margin-bottom: 0.25rem;">¡Tu Tienda está Lista!</h3>
+            <p style="color: #666; font-size: 0.95rem; margin-bottom: 1rem;">Hemos procesado el pago y aprovisionado tu espacio digital.</p>
+            
+            <div class="onboarding-details-card">
+              <h4>Detalles de Acceso</h4>
+              <p><strong>Nombre de la Tienda:</strong> {{ customerData.storeName || authService.storeInfo.name }}</p>
+              <p><strong>Enlace Público:</strong> <a href="http://{{ onboardingDetails.storeUrl }}" target="_blank">{{ onboardingDetails.storeUrl }}</a></p>
+              <p><strong>Usuario del Panel:</strong> {{ authService.email }}</p>
+              <p><strong>Contraseña Temporal:</strong> <code>{{ onboardingDetails.tempPassword }}</code></p>
+            </div>
+            
+            <button class="btn-solid active-scale" (click)="enterAdminPanel()" style="width: 100%; padding: 0.9rem; border-radius: 0.75rem; background: var(--color-primary); color: white; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 12px rgba(74,124,89,0.2); margin-top: auto;">
+              Ir al Panel de Control
+            </button>
           </div>
         </div>
       </div>
@@ -460,13 +478,56 @@ declare var Swal: any;
       justify-content: center;
       text-align: center;
       z-index: 10;
-      padding: 2rem;
+      padding: 2.5rem;
       animation: fadeIn 0.3s ease;
+      box-sizing: border-box;
+      overflow-y: auto;
     }
     .success-overlay .check-icon {
-      font-size: 4rem;
+      font-size: 3.5rem;
       color: var(--color-primary);
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .onboarding-details-card {
+      background: #faf9f6;
+      border: 1px solid #e5e0d8;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      width: 100%;
+      text-align: left;
+      box-sizing: border-box;
+      margin-top: 1rem;
+      margin-bottom: 1.5rem;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .onboarding-details-card h4 {
+      margin-top: 0;
+      color: var(--color-primary);
+      font-weight: 700;
+      border-bottom: 1px solid #e5e0d8;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+    .onboarding-details-card p {
+      margin: 0.45rem 0;
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.5;
+    }
+    .onboarding-details-card a {
+      color: var(--color-primary);
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .onboarding-details-card code {
+      background: #e5e7eb;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #1f2937;
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .auth-container { display: flex; flex-direction: column; gap: 1.5rem; padding: 0.5rem 0; }
@@ -549,10 +610,23 @@ export class PricingComponent implements AfterViewInit {
   customerData = {
     firstName: '',
     lastName: '',
-    email: ''
+    email: '',
+    storeName: '',
+    storeSlug: ''
+  };
+  loginEmail = '';
+  loginPassword = '';
+  onboardingDetails = {
+    tempPassword: '',
+    storeUrl: '',
+    storeSlug: '',
+    storeName: ''
   };
 
-  constructor(private scrollReveal: ScrollRevealService) {}
+  constructor(
+    private scrollReveal: ScrollRevealService,
+    public authService: AuthService
+  ) {}
   ngAfterViewInit(): void { this.scrollReveal.observeElements(); }
 
   openPaymentModal(plan: string, amount: number) {
@@ -562,7 +636,10 @@ export class PricingComponent implements AfterViewInit {
     this.paymentSuccess = false;
     
     this.checkoutStep = 'register';
-    this.customerData = { firstName: '', lastName: '', email: '' };
+    this.customerData = { firstName: '', lastName: '', email: '', storeName: '', storeSlug: '' };
+    this.loginEmail = '';
+    this.loginPassword = '';
+    this.onboardingDetails = { tempPassword: '', storeUrl: '', storeSlug: '', storeName: '' };
     
     if (this.paymentBrickController) {
       this.paymentBrickController.unmount();
@@ -570,14 +647,62 @@ export class PricingComponent implements AfterViewInit {
     }
   }
 
+  onStoreNameChange(name: string) {
+    this.customerData.storeSlug = name
+      .toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  }
+
+  enterAdminPanel() {
+    this.authService.showAdminView = true;
+    this.authService.saveSession();
+    this.closePaymentModal();
+  }
+
   simulateLogin() {
-    this.customerData.firstName = 'Juan';
-    this.customerData.lastName = 'Perez';
-    this.customerData.email = 'juan@esencia.com';
-    this.continueToPayment();
+    if (!this.loginEmail) return;
+    
+    const hasAlreadyPaid = this.authService.login(this.loginEmail);
+    
+    if (hasAlreadyPaid) {
+      this.paymentSuccess = true;
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Sesión Iniciada!',
+          text: 'Redirigiendo a tu panel de administración...',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+      setTimeout(() => {
+        this.closePaymentModal();
+      }, 2000);
+    } else {
+      // Si no pagó, completamos sus datos y abrimos la pasarela de Mercado Pago
+      this.customerData.firstName = this.authService.firstName;
+      this.customerData.lastName = this.authService.lastName || 'Cliente';
+      this.customerData.email = this.authService.email;
+      this.continueToPayment();
+    }
   }
 
   continueToPayment() {
+    if (this.checkoutStep === 'register') {
+      this.authService.register(
+        this.customerData.firstName,
+        this.customerData.lastName,
+        this.customerData.email,
+        this.customerData.storeName,
+        this.customerData.storeSlug
+      );
+    }
+    
     this.checkoutStep = 'payment';
     
     setTimeout(() => {
@@ -642,6 +767,7 @@ export class PricingComponent implements AfterViewInit {
               if (!formData.payer) formData.payer = {};
               formData.payer.first_name = this.customerData.firstName;
               formData.payer.last_name = this.customerData.lastName;
+              formData.payer.email = this.customerData.email;
 
               fetch("/process_payment", {
                 method: "POST",
@@ -652,7 +778,9 @@ export class PricingComponent implements AfterViewInit {
                   ...formData,
                   payment_method_type: selectedPaymentMethod,
                   plan_name: this.selectedPlan,
-                  plan_price: this.selectedAmount
+                  plan_price: this.selectedAmount,
+                  store_name: this.customerData.storeName || this.authService.storeInfo.name,
+                  store_slug: this.customerData.storeSlug || this.authService.storeInfo.slug
                 })
               })
               .then((response) => response.json())
@@ -661,6 +789,17 @@ export class PricingComponent implements AfterViewInit {
                 const isTicketPending = selectedPaymentMethod === 'ticket' && data.status === 'pending';
 
                 if (isSuccess || isTicketPending) {
+                  this.authService.markAsPaid();
+                  this.onboardingDetails = {
+                    tempPassword: data.tempPassword || 'Esencia_Temporal_Pass',
+                    storeUrl: data.storeUrl || `esencia.app/tienda/${this.customerData.storeSlug}`,
+                    storeSlug: data.storeSlug || this.customerData.storeSlug,
+                    storeName: data.storeName || this.customerData.storeName
+                  };
+                  this.authService.updateStoreInfo({
+                    name: this.onboardingDetails.storeName,
+                    slug: this.onboardingDetails.storeSlug
+                  });
                   this.paymentSuccess = true;
                   
                   if (selectedPaymentMethod === 'ticket') {
@@ -677,7 +816,7 @@ export class PricingComponent implements AfterViewInit {
                       icon: 'info',
                       title: '¡Cupón generado con éxito!',
                       html: `<p>Para completar tu suscripción de <strong>${this.selectedPlan}</strong>, debes abonar en Rapipago o Pago Fácil.</p>
-                             <p>Tu Order ID de prueba es: <strong>${data.id}</strong></p>
+                             <p>Tu Order ID es: <strong>${data.id}</strong></p>
                              ${ticketUrl ? `<a href="${ticketUrl}" target="_blank" style="display:inline-block;padding:12px 24px;background:#4a7c59;color:white;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:15px;">Ver Cupón de Pago</a>` : ''}`,
                       confirmButtonColor: '#4a7c59'
                     });
@@ -685,10 +824,11 @@ export class PricingComponent implements AfterViewInit {
                     Swal.fire({
                       icon: 'success',
                       title: '¡Pago procesado con éxito!',
-                      text: `Tu Order ID de prueba es: ${data.id}`,
+                      text: `Tu Order ID es: ${data.id}`,
                       confirmButtonColor: '#4a7c59'
                     });
                   }
+                  
                   resolve();
                 } else {
                   console.error('Pago rechazado o con error:', data);

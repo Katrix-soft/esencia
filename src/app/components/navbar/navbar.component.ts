@@ -1,6 +1,7 @@
 import { Component, HostListener } from '@angular/core';
 import { NgClass, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -25,17 +26,17 @@ import { FormsModule } from '@angular/forms';
 
         <!-- Actions -->
         <div class="nav-actions">
-          <!-- <button class="icon-btn" aria-label="Buscar" (click)="openSearch()">
-            <span class="material-symbols-outlined">search</span>
-          </button> -->
-          <!-- <button class="icon-btn notif-btn" aria-label="Notificaciones" (click)="showNotif()">
-            <span class="material-symbols-outlined">notifications</span>
-            <span class="notif-dot" *ngIf="hasNotif"></span>
-          </button> -->
-          <!-- <button class="icon-btn" aria-label="Perfil" (click)="showProfile()">
-            <span class="material-symbols-outlined">person</span>
-          </button> -->
-          <button class="btn-primary btn-shimmer active-scale" (click)="scrollTo('precios')">Prueba Gratis</button>
+          <ng-container *ngIf="authService.isLoggedIn && authService.hasPaid; else guestActions">
+            <button class="btn-primary active-scale" (click)="goToAdmin()" style="background: var(--color-primary); color: #fff; margin-right: 0.5rem;">
+              Panel Admin
+            </button>
+            <button class="icon-btn" aria-label="Cerrar Sesión" (click)="logout()" title="Cerrar Sesión">
+              <span class="material-symbols-outlined" style="color: #ef4444;">logout</span>
+            </button>
+          </ng-container>
+          <ng-template #guestActions>
+            <button class="btn-primary btn-shimmer active-scale" (click)="scrollTo('precios')">Prueba Gratis</button>
+          </ng-template>
         </div>
       </div>
     </nav>
@@ -242,6 +243,8 @@ export class NavbarComponent {
     );
   }
 
+  constructor(public authService: AuthService) {}
+
   @HostListener('window:scroll')
   onScroll(): void { this.isScrolled = window.scrollY > 20; }
 
@@ -249,6 +252,15 @@ export class NavbarComponent {
     if (id === 'hero') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  goToAdmin(): void {
+    this.authService.showAdminView = true;
+    this.authService.saveSession();
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 
   openSearch(): void {

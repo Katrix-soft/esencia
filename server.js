@@ -2,13 +2,14 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
+const fs = require('fs');
 const { MercadoPagoConfig, Order } = require('mercadopago');
 
 // Cargar variables de entorno si existe el archivo .env (útil en dev)
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 3000;
 
 // Configurar SDK de Mercado Pago
 const client = new MercadoPagoConfig({ 
@@ -115,6 +116,89 @@ async function createOrderDirect(orderBody) {
   return response.json();
 }
 
+function generateOnboardingEmails(cardFormData, orderId) {
+  try {
+    const firstName = cardFormData.payer?.first_name || 'Cliente';
+    const lastName = cardFormData.payer?.last_name || '';
+    const email = cardFormData.payer?.email || 'cliente@esencia.com';
+    
+    const storeName = cardFormData.store_name || `Perfumería de ${firstName}`;
+    const storeSlug = cardFormData.store_slug || firstName.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'mi-perfumeria';
+    const storeUrl = `esencia.app/tienda/${storeSlug}`;
+    
+    const tempPassword = `Esencia_${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+    const paymentDate = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+    const paymentAmount = `$${cardFormData.plan_price || cardFormData.transaction_amount || 0}`;
+
+    const clientEmailBody = `Asunto: ¡Tu tienda en Esencia está lista, ${firstName}!
+
+Hola ${firstName},
+
+¡Felicidades! Nos alegra contarte que tu tienda en Esencia ha sido creada exitosamente y ya se encuentra activa para recibir visitas.
+
+Aquí tienes el enlace para ver tu tienda pública:
+${storeUrl}
+
+Para comenzar a configurar y gestionar tu negocio, puedes ingresar a tu panel de administración en:
+esencia.app/admin
+
+Tus credenciales de acceso son:
+Usuario: ${email}
+Contraseña temporal: ${tempPassword}
+
+Te recomendamos realizar los siguientes primeros pasos para poner a punto tu tienda:
+1. Iniciar sesión en el panel de administración con tu contraseña temporal.
+2. Subir tu logo y personalizar los colores de la tienda.
+3. Agregar tus primeros productos al catálogo.
+4. Compartir el link de tu tienda con tus clientes.
+
+Si tienes alguna duda o necesitas asistencia durante la configuración, no dudes en ponerte en contacto con el equipo de soporte de Katrix respondiendo a este correo o escribiendo a soporte@katrix.co.
+
+¡Mucho éxito con tu nueva perfumería online!
+
+El equipo de Esencia & Katrix`;
+
+    const internalEmailBody = `Asunto: Nueva tienda creada — ${storeName}
+
+Equipo de Katrix,
+
+Se ha completado el registro y pago para una nueva tienda en la plataforma Esencia. A continuación se detallan los datos de aprovisionamiento:
+
+Cliente: ${firstName} ${lastName}
+Email de contacto: ${email}
+
+Información de la tienda:
+- Nombre de la tienda: ${storeName}
+- URL pública: ${storeUrl}
+
+Detalles del pago:
+- Fecha de pago: ${paymentDate}
+- Monto pagado: ${paymentAmount}
+
+Recordatorio: Realizar seguimiento preventivo a las 48 horas si el cliente aún no ha iniciado sesión en su panel de administración.`;
+
+    // Ensure emails directory exists
+    const emailsDir = path.join(__dirname, 'emails');
+    if (!fs.existsSync(emailsDir)) {
+      fs.mkdirSync(emailsDir, { recursive: true });
+    }
+
+    // Write files
+    fs.writeFileSync(path.join(emailsDir, `email_cliente_${orderId}.txt`), clientEmailBody, 'utf8');
+    fs.writeFileSync(path.join(emailsDir, `email_interno_${orderId}.txt`), internalEmailBody, 'utf8');
+
+    console.log(`\n==================================================`);
+    console.log(`ONBOARDING EMAILS GENERATED FOR ORDER ${orderId}`);
+    console.log(`Saved to workspace: emails/email_cliente_${orderId}.txt & email_interno_${orderId}.txt`);
+    console.log(`==================================================\n`);
+
+    return { tempPassword, storeUrl, storeSlug, storeName };
+  } catch (error) {
+    console.error('Error generating onboarding emails:', error);
+    return {};
+  }
+}
+
 // ==========================================
 // 1. Endpoint Proxy para procesar el pago (Orders API)
 // ==========================================
@@ -124,7 +208,14 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
     console.log('Creando Order (v1/orders) directa:', new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }), '\n', JSON.stringify(orderBody, null, 2));
 
     const response = await createOrderDirect(orderBody);
-    res.status(201).json(response);
+    
+    // Generate onboarding emails on success
+    let onboarding = {};
+    if (response.id) {
+      onboarding = generateOnboardingEmails(req.body, response.id) || {};
+    }
+    
+    res.status(201).json({ ...response, ...onboarding });
   } catch (error) {
     console.error('Error al procesar la Order directa:', JSON.stringify(error, null, 2));
     res.status(500).json({ error: 'Error procesando el pago', details: error });
@@ -132,7 +223,7 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
 });
 
 // Endpoint adicional para el Card Payment Brick de Mercado Pago
-app.post('/process_payment', async (req, res) => {
+app.post(['/process_payment', '/api/payments/create'], async (req, res) => {
   try {
     const orderBody = mapCardFormDataToOrder(req.body);
     console.log('Creando Order (process_payment) directa:', new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }), '\n', JSON.stringify(orderBody, null, 2));
@@ -145,8 +236,14 @@ app.post('/process_payment', async (req, res) => {
       paymentId = response.transactions.payments[0].id || response.id;
     }
     
+    // Generate onboarding emails on success
+    let onboarding = {};
+    if (paymentId) {
+      onboarding = generateOnboardingEmails(req.body, paymentId) || {};
+    }
+    
     // Enviamos la respuesta, el frontend extrae .id o .status
-    res.status(201).json({ ...response, id: paymentId });
+    res.status(201).json({ ...response, id: paymentId, ...onboarding });
   } catch (error) {
     console.error('Error al crear la Order directa:', JSON.stringify(error, null, 2));
     res.status(500).json(error);
