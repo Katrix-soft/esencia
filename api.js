@@ -401,6 +401,41 @@ El servidor valida la firma HMAC enviada en el header \`x-signature\` usando el 
 };
 
 // ============================================================
+// SWAGGER HTML TEMPLATE
+// ============================================================
+const swaggerHtml = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esencia API — Documentación</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css">
+  <style>
+    body { margin: 0; }
+    .topbar { background: #1a1a2e !important; }
+    .topbar .download-url-wrapper { display: none; }
+    .info .title { color: #2d6a4f; }
+    .btn.authorize { border-color: #2d6a4f; color: #2d6a4f; }
+    .btn.authorize svg { fill: #2d6a4f; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      spec: __SWAGGER_SPEC__,
+      dom_id: '#swagger-ui',
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+      layout: 'BaseLayout',
+      deepLinking: true,
+      tryItOutEnabled: true
+    });
+  </script>
+</body>
+</html>`;
+
+// ============================================================
 // PLANES — definición centralizada (fuente de verdad)
 // ============================================================
 const PLANS = [
@@ -434,6 +469,18 @@ const PLANS = [
     ]
   }
 ];
+
+// ============================================================
+// RUTAS DE DOCS
+// ============================================================
+router.get('/docs', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(swaggerHtml.replace('__SWAGGER_SPEC__', JSON.stringify(swaggerSpec)));
+});
+
+router.get('/spec.json', (req, res) => {
+  res.json(swaggerSpec);
+});
 
 // ============================================================
 // RUTAS DE PLANES
@@ -529,47 +576,8 @@ router.provisionStore = function(slug, name, email, products) {
   return storesDB[slug];
 };
 
-// ============================================================
-// SWAGGER UI ROUTE
-// ============================================================
-const swaggerHtml = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Esencia API — Documentación</title>
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css">
-  <style>
-    body { margin: 0; }
-    .topbar { background: #1a1a2e !important; }
-    .topbar .download-url-wrapper { display: none; }
-    .swagger-ui .topbar-wrapper img { content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="30"><text y="22" font-size="20" font-weight="bold" fill="%23a8d5a2">Esencia</text></svg>'); }
-    .info .title { color: #2d6a4f; }
-    .btn.authorize { border-color: #2d6a4f; color: #2d6a4f; }
-    .btn.authorize svg { fill: #2d6a4f; }
-  </style>
-</head>
-<body>
-  <div id="swagger-ui"></div>
-  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
-  <script>
-    SwaggerUIBundle({
-      spec: __SWAGGER_SPEC__,
-      dom_id: '#swagger-ui',
-      presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
-      layout: 'BaseLayout',
-      deepLinking: true,
-      tryItOutEnabled: true
-    });
-  </script>
-</body>
-</html>`;
-
-router.getSwaggerHtml = function() {
-  return swaggerHtml.replace('__SWAGGER_SPEC__', JSON.stringify(swaggerSpec));
-};
-
 router.swaggerSpec = swaggerSpec;
 router.PLANS = PLANS;
 
 module.exports = router;
+

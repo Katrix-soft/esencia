@@ -23,16 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ============================================================
-// SWAGGER UI
-// ============================================================
-app.get('/api/docs', (req, res) => {
-  res.setHeader('Content-Type', 'text/html');
-  res.send(apiRouter.getSwaggerHtml());
-});
-app.get('/api/spec.json', (req, res) => res.json(apiRouter.swaggerSpec));
-
-// ============================================================
-// API ROUTER (planes, tiendas, productos, config)
+// API ROUTER (planes, tiendas, productos, config, docs)
 // ============================================================
 app.use('/api', apiRouter);
 
