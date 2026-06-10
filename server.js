@@ -193,7 +193,7 @@ Recordatorio: Realizar seguimiento preventivo a las 48 horas si el cliente aún 
       fs.mkdirSync(emailsDir, { recursive: true });
     }
 
-    // Write files
+    // Write files as backup
     fs.writeFileSync(path.join(emailsDir, `email_cliente_${orderId}.txt`), clientEmailBody, 'utf8');
     fs.writeFileSync(path.join(emailsDir, `email_interno_${orderId}.txt`), internalEmailBody, 'utf8');
 
@@ -201,6 +201,51 @@ Recordatorio: Realizar seguimiento preventivo a las 48 horas si el cliente aún 
     console.log(`ONBOARDING EMAILS GENERATED FOR ORDER ${orderId}`);
     console.log(`Saved to workspace: emails/email_cliente_${orderId}.txt & email_interno_${orderId}.txt`);
     console.log(`==================================================\n`);
+
+    // Dynamic Nodemailer Integration
+    try {
+      const nodemailer = require('nodemailer');
+      if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          }
+        });
+
+        // Email to customer
+        transporter.sendMail({
+          from: `"Esencia Onboarding" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: `¡Tu tienda en Esencia está lista, ${firstName}!`,
+          text: clientEmailBody.replace(/^Asunto:.*\n/, '')
+        }).then(info => {
+          console.log('Email enviado al cliente con éxito:', info.messageId);
+        }).catch(err => {
+          console.error('Error al enviar email al cliente:', err);
+        });
+
+        // Email to internal team
+        const recipientKatrix = process.env.KATRIX_NOTIFICATION_EMAIL || 'igsrdev@katrix.com.ar';
+        transporter.sendMail({
+          from: `"Esencia Onboarding" <${process.env.SMTP_USER}>`,
+          to: recipientKatrix,
+          subject: `Nueva tienda creada — ${storeName}`,
+          text: internalEmailBody.replace(/^Asunto:.*\n/, '')
+        }).then(info => {
+          console.log('Email interno enviado a Katrix con éxito:', info.messageId);
+        }).catch(err => {
+          console.error('Error al enviar email interno:', err);
+        });
+      } else {
+        console.log('[Warning] SMTP_USER y SMTP_PASS no están configurados en el archivo .env. Los correos reales no se enviarán.');
+      }
+    } catch (e) {
+      console.log('[Info] Nodemailer no está instalado en el proyecto. Para habilitar el envío real de emails ejecuta: npm install nodemailer');
+    }
 
     return { tempPassword, storeUrl, storeSlug, storeName };
   } catch (error) {
