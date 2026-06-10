@@ -82,10 +82,10 @@ declare var Swal: any;
                     <input type="text" id="storeName" [(ngModel)]="editableInfo.name" name="name" class="form-control" required>
                   </div>
                   <div class="form-group">
-                    <label for="storeSlug">Link personalizado (subdominio / slug)</label>
+                    <label for="storeSlug">Link personalizado (subdominio)</label>
                     <div class="input-addon-wrapper">
-                      <span class="input-prefix">{{ getHostPrefix() }}</span>
                       <input type="text" id="storeSlug" [(ngModel)]="editableInfo.slug" name="slug" class="form-control slug-input" required>
+                      <span class="input-suffix">.katrix.online</span>
                     </div>
                   </div>
                   <div class="form-group span-2">
@@ -122,7 +122,7 @@ declare var Swal: any;
               </div>
               <div class="promo-text">
                 <h3>¡Tu tienda está online!</h3>
-                <p>Cualquier persona puede ver tu catálogo e interactuar en: <strong>{{ windowOrigin }}/tienda/{{ authService.storeInfo.slug }}</strong></p>
+                <p>Cualquier persona puede ver tu catálogo e interactuar en: <strong>{{ authService.storeInfo.slug }}.katrix.online</strong></p>
               </div>
               <button class="btn-copy-link" (click)="copyStoreLink()">
                 <span class="material-symbols-outlined">content_copy</span>
@@ -557,6 +557,17 @@ declare var Swal: any;
     .input-prefix {
       background: #f1ede6;
       border-right: 1px solid #dcdad5;
+      padding: 0 0.85rem;
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #666;
+      font-weight: 600;
+      user-select: none;
+    }
+    .input-suffix {
+      background: #f1ede6;
+      border-left: 1px solid #dcdad5;
       padding: 0 0.85rem;
       display: flex;
       align-items: center;
@@ -1071,7 +1082,7 @@ export class AdminComponent implements OnInit {
   }
 
   copyStoreLink() {
-    const link = `${window.location.origin}/tienda/${this.authService.storeInfo.slug}`;
+    const link = `http://${this.authService.storeInfo.slug}.katrix.online`;
     navigator.clipboard.writeText(link).then(() => {
       if (typeof Swal !== 'undefined') {
         Swal.fire({
@@ -1089,7 +1100,7 @@ export class AdminComponent implements OnInit {
   }
 
   goToStore() {
-    const link = `${window.location.origin}/tienda/${this.authService.storeInfo.slug}`;
+    const link = `http://${this.authService.storeInfo.slug}.katrix.online`;
     window.open(link, '_blank');
   }
 

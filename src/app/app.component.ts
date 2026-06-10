@@ -331,8 +331,13 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.scrollReveal.init();
 
+    const hostname = window.location.hostname;
     const path = window.location.pathname;
-    if (path.startsWith('/tienda/')) {
+
+    if (hostname.endsWith('.katrix.online') && hostname !== 'katrix.online') {
+      this.isStoreView = true;
+      this.storeSlug = hostname.split('.')[0];
+    } else if (path.startsWith('/tienda/')) {
       this.isStoreView = true;
       this.storeSlug = path.substring(8);
     }

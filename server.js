@@ -125,16 +125,16 @@ function generateOnboardingEmails(cardFormData, orderId, requestHost) {
     const storeName = cardFormData.store_name || `Perfumería de ${firstName}`;
     const storeSlug = cardFormData.store_slug || firstName.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'mi-perfumeria';
     
-    // Dynamically calculate the frontend origin
+    // Dynamically calculate the frontend origin and admin panel link
     let origin = 'http://localhost:4200';
     if (requestHost) {
       if (requestHost.includes('localhost') || requestHost.includes('127.0.0.1')) {
         origin = 'http://localhost:4200';
       } else {
-        origin = `https://${requestHost}`;
+        origin = `https://katrix.online`; // Base domain for admin
       }
     }
-    const storeUrl = `${origin}/tienda/${storeSlug}`;
+    const storeUrl = `http://${storeSlug}.katrix.online`;
     
     const tempPassword = `Esencia_${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
     const paymentDate = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
