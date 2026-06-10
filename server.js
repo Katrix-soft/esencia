@@ -116,7 +116,7 @@ async function createOrderDirect(orderBody) {
   return response.json();
 }
 
-function generateOnboardingEmails(cardFormData, orderId) {
+function generateOnboardingEmails(cardFormData, orderId, requestHost) {
   try {
     const firstName = cardFormData.payer?.first_name || 'Cliente';
     const lastName = cardFormData.payer?.last_name || '';
@@ -124,7 +124,17 @@ function generateOnboardingEmails(cardFormData, orderId) {
     
     const storeName = cardFormData.store_name || `Perfumería de ${firstName}`;
     const storeSlug = cardFormData.store_slug || firstName.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'mi-perfumeria';
-    const storeUrl = `esencia.app/tienda/${storeSlug}`;
+    
+    // Dynamically calculate the frontend origin
+    let origin = 'http://localhost:4200';
+    if (requestHost) {
+      if (requestHost.includes('localhost') || requestHost.includes('127.0.0.1')) {
+        origin = 'http://localhost:4200';
+      } else {
+        origin = `https://${requestHost}`;
+      }
+    }
+    const storeUrl = `${origin}/tienda/${storeSlug}`;
     
     const tempPassword = `Esencia_${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
     const paymentDate = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
@@ -140,7 +150,7 @@ Aquí tienes el enlace para ver tu tienda pública:
 ${storeUrl}
 
 Para comenzar a configurar y gestionar tu negocio, puedes ingresar a tu panel de administración en:
-esencia.app/admin
+${origin}/admin
 
 Tus credenciales de acceso son:
 Usuario: ${email}
@@ -212,7 +222,7 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
     // Generate onboarding emails on success
     let onboarding = {};
     if (response.id) {
-      onboarding = generateOnboardingEmails(req.body, response.id) || {};
+      onboarding = generateOnboardingEmails(req.body, response.id, req.headers.host) || {};
     }
     
     res.status(201).json({ ...response, ...onboarding });
@@ -239,7 +249,7 @@ app.post(['/process_payment', '/api/payments/create'], async (req, res) => {
     // Generate onboarding emails on success
     let onboarding = {};
     if (paymentId) {
-      onboarding = generateOnboardingEmails(req.body, paymentId) || {};
+      onboarding = generateOnboardingEmails(req.body, paymentId, req.headers.host) || {};
     }
     
     // Enviamos la respuesta, el frontend extrae .id o .status

@@ -31,6 +31,14 @@ export class AuthService {
     address: 'Av. Alvear 1850, CABA, Argentina'
   };
 
+  mockProducts = [
+    { id: 1, name: 'Esencia Pure Fleur', brand: 'Esencia', category: 'Floral', price: 18500, stock: 12, volume: '100ml' },
+    { id: 2, name: 'Ambre Mystique', brand: 'Esencia', category: 'Amaderado', price: 22000, stock: 4, volume: '80ml' },
+    { id: 3, name: 'Néroli Frais', brand: 'Esencia', category: 'Cítrico', price: 16000, stock: 25, volume: '100ml' },
+    { id: 4, name: 'Oud Imperial', brand: 'Luxe', category: 'Amaderado', price: 34999, stock: 8, volume: '50ml' },
+    { id: 5, name: 'Jardin de Rosas', brand: 'Rosé', category: 'Floral', price: 19800, stock: 0, volume: '90ml' }
+  ];
+
   constructor() {
     this.loadSession();
   }
@@ -49,6 +57,9 @@ export class AuthService {
         if (data.storeInfo) {
           this.storeInfo = { ...this.storeInfo, ...data.storeInfo };
         }
+        if (data.mockProducts) {
+          this.mockProducts = data.mockProducts;
+        }
       }
     } catch (e) {
       console.error('Error loading session from localStorage', e);
@@ -64,7 +75,8 @@ export class AuthService {
         firstName: this.firstName,
         lastName: this.lastName,
         email: this.email,
-        storeInfo: this.storeInfo
+        storeInfo: this.storeInfo,
+        mockProducts: this.mockProducts
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (e) {

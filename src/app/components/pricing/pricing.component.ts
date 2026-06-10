@@ -792,7 +792,7 @@ export class PricingComponent implements AfterViewInit {
                   this.authService.markAsPaid();
                   this.onboardingDetails = {
                     tempPassword: data.tempPassword || 'Esencia_Temporal_Pass',
-                    storeUrl: data.storeUrl || `esencia.app/tienda/${this.customerData.storeSlug}`,
+                    storeUrl: data.storeUrl || `${window.location.origin}/tienda/${this.customerData.storeSlug}`,
                     storeSlug: data.storeSlug || this.customerData.storeSlug,
                     storeName: data.storeName || this.customerData.storeName
                   };

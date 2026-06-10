@@ -84,7 +84,7 @@ declare var Swal: any;
                   <div class="form-group">
                     <label for="storeSlug">Link personalizado (subdominio / slug)</label>
                     <div class="input-addon-wrapper">
-                      <span class="input-prefix">esencia.app/</span>
+                      <span class="input-prefix">{{ getHostPrefix() }}</span>
                       <input type="text" id="storeSlug" [(ngModel)]="editableInfo.slug" name="slug" class="form-control slug-input" required>
                     </div>
                   </div>
@@ -122,7 +122,7 @@ declare var Swal: any;
               </div>
               <div class="promo-text">
                 <h3>¡Tu tienda está online!</h3>
-                <p>Cualquier persona puede ver tu catálogo e interactuar en: <strong>esencia.app/{{ authService.storeInfo.slug }}</strong></p>
+                <p>Cualquier persona puede ver tu catálogo e interactuar en: <strong>{{ windowOrigin }}/tienda/{{ authService.storeInfo.slug }}</strong></p>
               </div>
               <button class="btn-copy-link" (click)="copyStoreLink()">
                 <span class="material-symbols-outlined">content_copy</span>
@@ -1008,13 +1008,23 @@ export class AdminComponent implements OnInit {
     address: ''
   };
 
-  mockProducts = [
-    { id: 1, name: 'Esencia Pure Fleur', brand: 'Esencia', category: 'Floral', price: 18500, stock: 12, volume: '100ml' },
-    { id: 2, name: 'Ambre Mystique', brand: 'Esencia', category: 'Amaderado', price: 22000, stock: 4, volume: '80ml' },
-    { id: 3, name: 'Néroli Frais', brand: 'Esencia', category: 'Cítrico', price: 16000, stock: 25, volume: '100ml' },
-    { id: 4, name: 'Oud Imperial', brand: 'Luxe', category: 'Amaderado', price: 34999, stock: 8, volume: '50ml' },
-    { id: 5, name: 'Jardin de Rosas', brand: 'Rosé', category: 'Floral', price: 19800, stock: 0, volume: '90ml' }
-  ];
+  get mockProducts(): any[] {
+    return this.authService.mockProducts;
+  }
+  set mockProducts(val: any[]) {
+    this.authService.mockProducts = val;
+    this.authService.saveSession();
+  }
+
+  saveProducts() {
+    this.authService.saveSession();
+  }
+
+  windowOrigin = window.location.origin;
+
+  getHostPrefix(): string {
+    return window.location.host + '/tienda/';
+  }
 
   constructor(public authService: AuthService) {}
 
@@ -1061,7 +1071,7 @@ export class AdminComponent implements OnInit {
   }
 
   copyStoreLink() {
-    const link = `https://esencia.app/${this.authService.storeInfo.slug}`;
+    const link = `${window.location.origin}/tienda/${this.authService.storeInfo.slug}`;
     navigator.clipboard.writeText(link).then(() => {
       if (typeof Swal !== 'undefined') {
         Swal.fire({
@@ -1079,7 +1089,8 @@ export class AdminComponent implements OnInit {
   }
 
   goToStore() {
-    this.onBackToStore.emit();
+    const link = `${window.location.origin}/tienda/${this.authService.storeInfo.slug}`;
+    window.open(link, '_blank');
   }
 
   logout() {
@@ -1135,6 +1146,7 @@ export class AdminComponent implements OnInit {
             stock: v.stock || 0,
             volume: v.volume || '100ml'
           });
+          this.saveProducts();
           Swal.fire('¡Creado!', 'El perfume fue agregado al catálogo.', 'success');
         }
       });
@@ -1150,6 +1162,7 @@ export class AdminComponent implements OnInit {
           stock: 10,
           volume: '100ml'
         });
+        this.saveProducts();
       }
     }
   }
@@ -1184,12 +1197,16 @@ export class AdminComponent implements OnInit {
           product.name = v.name || product.name;
           product.price = v.price;
           product.stock = v.stock;
+          this.saveProducts();
           Swal.fire('¡Actualizado!', 'El producto fue modificado.', 'success');
         }
       });
     } else {
       const newPrice = prompt('Nuevo precio:', product.price.toString());
-      if (newPrice) product.price = Number(newPrice);
+      if (newPrice) {
+        product.price = Number(newPrice);
+        this.saveProducts();
+      }
     }
   }
 
