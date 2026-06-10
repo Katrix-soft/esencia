@@ -606,6 +606,9 @@ export class PricingComponent implements AfterViewInit {
   selectedAmount = 0;
   paymentBrickController: any;
 
+  plans: any[] = [];
+  plansLoading = true;
+
   checkoutStep: 'login' | 'register' | 'payment' = 'register';
   customerData = {
     firstName: '',
@@ -627,7 +630,14 @@ export class PricingComponent implements AfterViewInit {
     private scrollReveal: ScrollRevealService,
     public authService: AuthService
   ) {}
-  ngAfterViewInit(): void { this.scrollReveal.observeElements(); }
+
+  ngAfterViewInit(): void {
+    this.scrollReveal.observeElements();
+    fetch('/api/plans')
+      .then(r => r.json())
+      .then(data => { this.plans = data; this.plansLoading = false; })
+      .catch(() => { this.plansLoading = false; });
+  }
 
   openPaymentModal(plan: string, amount: number) {
     this.selectedPlan = plan;

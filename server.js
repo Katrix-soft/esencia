@@ -4,6 +4,7 @@ const cors = require('cors');
 const crypto = require('crypto');
 const fs = require('fs');
 const { MercadoPagoConfig, Order } = require('mercadopago');
+const apiRouter = require('./api');
 
 // Cargar variables de entorno si existe el archivo .env (útil en dev)
 require('dotenv').config();
@@ -20,6 +21,20 @@ const orderAPI = new Order(client);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ============================================================
+// SWAGGER UI
+// ============================================================
+app.get('/api/docs', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(apiRouter.getSwaggerHtml());
+});
+app.get('/api/spec.json', (req, res) => res.json(apiRouter.swaggerSpec));
+
+// ============================================================
+// API ROUTER (planes, tiendas, productos, config)
+// ============================================================
+app.use('/api', apiRouter);
 
 // Función helper para mapear los datos del frontend (Payment Brick) al formato de Orders API
 function mapCardFormDataToOrder(cardFormData) {
@@ -367,14 +382,7 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// ==========================================
-// 3. Endpoint Configuración (Llave Pública)
-// ==========================================
-app.get('/api/config', (req, res) => {
-  res.json({
-    publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || ''
-  });
-});
+// /api/config ya está montado en apiRouter — no duplicar
 
 // ==========================================
 // 4. Servir Aplicación Angular (Frontend)
