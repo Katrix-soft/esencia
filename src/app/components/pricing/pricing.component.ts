@@ -770,7 +770,12 @@ export class PricingComponent implements AfterViewInit {
   constructor(
     private scrollReveal: ScrollRevealService,
     public authService: AuthService
-  ) {}
+  ) {
+    this.authService.openLoginModalEmitter.subscribe(() => {
+      this.openPaymentModal('Plan Semilla', 11900);
+      this.checkoutStep = 'login';
+    });
+  }
 
   ngAfterViewInit(): void {
     this.scrollReveal.observeElements();

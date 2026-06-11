@@ -1,0 +1,27 @@
+Asunto: ¡Tu tienda en Esencia está lista, test!
+
+Hola test,
+
+¡Felicidades! Nos alegra contarte que tu tienda en Esencia ha sido creada exitosamente y ya se encuentra activa para recibir visitas.
+
+Aquí tienes el enlace para ver tu tienda pública:
+http://12345678.katrix.online
+
+Para comenzar a configurar y gestionar tu negocio, puedes ingresar a tu panel de administración en:
+http://localhost:4200/admin
+
+Tus credenciales de acceso son:
+Usuario: TESTUSER8365545420584912713@testuser.com
+Contraseña temporal: Esencia_E0A489
+
+Te recomendamos realizar los siguientes primeros pasos para poner a punto tu tienda:
+1. Iniciar sesión en el panel de administración con tu contraseña temporal.
+2. Subir tu logo y personalizar los colores de la tienda.
+3. Agregar tus primeros productos al catálogo.
+4. Compartir el link de tu tienda con tus clientes.
+
+Si tienes alguna duda o necesitas asistencia durante la configuración, no dudes en ponerte en contacto con el equipo de soporte de Katrix respondiendo a este correo o escribiendo a soporte@katrix.co.
+
+¡Mucho éxito con tu nueva perfumería online!
+
+El equipo de Esencia & Katrix

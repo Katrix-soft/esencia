@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
+const nodemailer = require('nodemailer');
 const { spec: swaggerSpecOriginal, PLANS } = require('./swagger-spec');
 
 const router = express.Router();
@@ -456,11 +457,94 @@ function authMiddleware(req, res, next) {
 }
 
 // ============================================================
+// SOPORTE DE FACTURACIÓN Y CONTROL DE ESTADO DE PAGO
+// ============================================================
+function checkStoreStatus(store) {
+  const today = new Date();
+  const dayOfMonth = today.getDate(); // 1 a 31
+  
+  // Si la tienda está explícitamente marcada como unpaid y ya pasamos el día 15
+  if (dayOfMonth > 15 && store.paymentStatus === 'unpaid') {
+    return {
+      active: false,
+      reason: 'Tu tienda ha sido deshabilitada temporalmente por falta de pago. Tienes del 1 al 15 de cada mes para abonar el servicio de Esencia.'
+    };
+  }
+  
+  return { active: true };
+}
+
+let transporter;
+function getTransporter() {
+  if (!transporter && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+  }
+  return transporter;
+}
+
+async function sendPasswordEmail(email, storeName, newPassword) {
+  const mailTransporter = getTransporter();
+  if (!mailTransporter) {
+    console.log('[Warning SMTP] No configurado. Contraseña no enviada por mail:', newPassword);
+    return false;
+  }
+  
+  const mailOptions = {
+    from: `"Soporte Esencia" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: `Nueva Contraseña para tu Tienda — ${storeName}`,
+    html: `
+      <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px;">
+        <h2 style="color: #2e3230; border-bottom: 2px solid #2e3230; padding-bottom: 10px;">Esencia Onboarding</h2>
+        <p>Hola,</p>
+        <p>Hemos procesado la solicitud de cambio de contraseña para tu cuenta de la tienda <strong>"${storeName}"</strong>.</p>
+        <p>Tus nuevas credenciales de acceso son:</p>
+        <table style="width: 100%; background: #f9f9f9; padding: 15px; border-radius: 6px; margin: 15px 0;">
+          <tr>
+            <td style="font-weight: bold; width: 100px;">Usuario:</td>
+            <td>${email}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold;">Contraseña:</td>
+            <td><code style="background: #eef; padding: 2px 6px; border-radius: 4px; font-size: 1.1em;">${newPassword}</code></td>
+          </tr>
+        </table>
+        <p>Te recomendamos ingresar al panel de administración y cambiarla en la sección de configuraciones.</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="font-size: 0.85em; color: #777;">Este es un mensaje automático. No respondas a este correo.</p>
+      </div>
+    `
+  };
+  
+  try {
+    await mailTransporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error enviando mail con nodemailer:', error);
+    return false;
+  }
+}
+
+// ============================================================
 // TIENDAS (persistencia de datos local)
 // ============================================================
 router.get('/stores/:slug', (req, res) => {
   const store = storesDB[req.params.slug];
   if (!store) return res.status(404).json({ error: 'Tienda no encontrada' });
+  
+  const status = checkStoreStatus(store);
+  if (!status.active) {
+    return res.status(402).json({ error: 'Pago requerido', message: status.reason });
+  }
+
   res.json(store);
 });
 
@@ -478,6 +562,12 @@ router.put('/stores/:slug', authMiddleware, (req, res) => {
 router.get('/stores/:slug/products', (req, res) => {
   const store = storesDB[req.params.slug];
   if (!store) return res.status(404).json({ error: 'Tienda no encontrada' });
+  
+  const status = checkStoreStatus(store);
+  if (!status.active) {
+    return res.status(402).json({ error: 'Pago requerido', message: status.reason });
+  }
+
   let products = store.products || [];
   if (req.query.category) products = products.filter(p => p.category === req.query.category);
   if (req.query.inStock === 'true') products = products.filter(p => p.stock > 0);
@@ -512,6 +602,47 @@ router.delete('/stores/:slug/products/:productId', authMiddleware, (req, res) =>
 });
 
 // ============================================================
+// CONFIGURACIÓN DE CONTRASENAS Y FACTURACIÓN
+// ============================================================
+router.post('/stores/:slug/change-password', authMiddleware, async (req, res) => {
+  const { slug } = req.params;
+  const store = storesDB[slug];
+  if (!store) return res.status(404).json({ error: 'Tienda no encontrada' });
+  
+  let { password } = req.body;
+  if (!password) {
+    // Generar una clave temporal segura si no se envía
+    password = 'Esencia_' + crypto.randomBytes(3).toString('hex').toUpperCase();
+  }
+  
+  store.password = password;
+  saveDB();
+  
+  const emailSent = await sendPasswordEmail(store.email, store.name, password);
+  
+  res.json({
+    message: 'Contraseña actualizada correctamente.',
+    password,
+    emailSent
+  });
+});
+
+router.put('/stores/:slug/billing', authMiddleware, (req, res) => {
+  const { slug } = req.params;
+  const store = storesDB[slug];
+  if (!store) return res.status(404).json({ error: 'Tienda no encontrada' });
+  
+  const { paymentStatus } = req.body;
+  if (paymentStatus && ['paid', 'unpaid'].includes(paymentStatus)) {
+    store.paymentStatus = paymentStatus;
+    saveDB();
+    return res.json({ message: 'Estado de facturación actualizado', store });
+  }
+  
+  res.status(400).json({ error: 'paymentStatus inválido. Debe ser paid o unpaid.' });
+});
+
+// ============================================================
 // PROVISIONING INTERNO (llamado desde server.js post-pago)
 // ============================================================
 router.provisionStore = function(slug, name, email, products) {
@@ -519,6 +650,8 @@ router.provisionStore = function(slug, name, email, products) {
     slug,
     name,
     email,
+    password: crypto.randomBytes(4).toString('hex').toUpperCase(),
+    paymentStatus: 'paid',
     description: '',
     phone: '',
     address: '',

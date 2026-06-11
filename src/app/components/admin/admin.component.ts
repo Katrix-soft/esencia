@@ -1009,7 +1009,7 @@ export class AdminComponent implements OnInit {
   @Output() onBackToStore = new EventEmitter<void>();
 
   activeTab: 'general' | 'catalog' | 'stats' = 'general';
-  
+
   editableInfo: StoreInfo = {
     name: '',
     description: '',
@@ -1037,7 +1037,7 @@ export class AdminComponent implements OnInit {
     return window.location.host + '/tienda/';
   }
 
-  constructor(public authService: AuthService) {}
+  constructor(public authService: AuthService) { }
 
   ngOnInit() {
     this.resetForm();
@@ -1063,12 +1063,12 @@ export class AdminComponent implements OnInit {
     if (!this.editableInfo.name || !this.editableInfo.slug || !this.editableInfo.email) {
       return;
     }
-    
+
     // Convertir el slug a un formato seguro de URL
     this.editableInfo.slug = this.editableInfo.slug.toLowerCase().replace(/[^a-z0-9]/g, '-');
-    
+
     this.authService.updateStoreInfo(this.editableInfo);
-    
+
     if (typeof Swal !== 'undefined') {
       Swal.fire({
         icon: 'success',

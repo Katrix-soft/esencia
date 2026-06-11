@@ -1,0 +1,18 @@
+Asunto: Nueva tienda creada — 12345678
+
+Equipo de Katrix,
+
+Se ha completado el registro y pago para una nueva tienda en la plataforma Esencia. A continuación se detallan los datos de aprovisionamiento:
+
+Cliente: test user
+Email de contacto: TESTUSER8365545420584912713@testuser.com
+
+Información de la tienda:
+- Nombre de la tienda: 12345678
+- URL pública: http://12345678.katrix.online
+
+Detalles del pago:
+- Fecha de pago: 10/6/2026, 09:58:35
+- Monto pagado: $20
+
+Recordatorio: Realizar seguimiento preventivo a las 48 horas si el cliente aún no ha iniciado sesión en su panel de administración.

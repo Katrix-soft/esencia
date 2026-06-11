@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, EventEmitter } from '@angular/core';
 
 export interface StoreInfo {
   name: string;
@@ -7,6 +7,7 @@ export interface StoreInfo {
   phone: string;
   email: string;
   address: string;
+  paymentStatus?: 'paid' | 'unpaid';
 }
 
 @Injectable({
@@ -14,6 +15,8 @@ export interface StoreInfo {
 })
 export class AuthService {
   private STORAGE_KEY = 'esencia_session';
+
+  openLoginModalEmitter = new EventEmitter<void>();
 
   isLoggedIn = false;
   hasPaid = false;
