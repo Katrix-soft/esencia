@@ -334,7 +334,8 @@ export class AppComponent implements OnInit {
     const hostname = window.location.hostname;
     const path = window.location.pathname;
 
-    if (hostname.endsWith('.katrix.online') && hostname !== 'katrix.online') {
+    if ((hostname.endsWith('.katrix.com.ar') && hostname !== 'esencia.katrix.com.ar' && hostname !== 'api.katrix.com.ar') || 
+        (hostname.endsWith('.katrix.online') && hostname !== 'katrix.online')) {
       this.isStoreView = true;
       this.storeSlug = hostname.split('.')[0];
     } else if (path.startsWith('/tienda/')) {

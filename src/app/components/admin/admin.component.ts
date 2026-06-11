@@ -85,7 +85,7 @@ declare var Swal: any;
                     <label for="storeSlug">Link personalizado (subdominio)</label>
                     <div class="input-addon-wrapper">
                       <input type="text" id="storeSlug" [(ngModel)]="editableInfo.slug" name="slug" class="form-control slug-input" required>
-                      <span class="input-suffix">.katrix.online</span>
+                      <span class="input-suffix">.katrix.com.ar</span>
                     </div>
                   </div>
                   <div class="form-group span-2">
@@ -122,7 +122,7 @@ declare var Swal: any;
               </div>
               <div class="promo-text">
                 <h3>¡Tu tienda está online!</h3>
-                <p>Cualquier persona puede ver tu catálogo e interactuar en: <strong>{{ authService.storeInfo.slug }}.katrix.online</strong></p>
+                <p>Cualquier persona puede ver tu catálogo e interactuar en: <strong>{{ authService.storeInfo.slug }}.katrix.com.ar</strong></p>
               </div>
               <button class="btn-copy-link" (click)="copyStoreLink()">
                 <span class="material-symbols-outlined">content_copy</span>
@@ -1082,7 +1082,7 @@ export class AdminComponent implements OnInit {
   }
 
   copyStoreLink() {
-    const link = `http://${this.authService.storeInfo.slug}.katrix.online`;
+    const link = `http://${this.authService.storeInfo.slug}.katrix.com.ar`;
     navigator.clipboard.writeText(link).then(() => {
       if (typeof Swal !== 'undefined') {
         Swal.fire({
@@ -1100,7 +1100,7 @@ export class AdminComponent implements OnInit {
   }
 
   goToStore() {
-    const link = `http://${this.authService.storeInfo.slug}.katrix.online`;
+    const link = `http://${this.authService.storeInfo.slug}.katrix.com.ar`;
     window.open(link, '_blank');
   }
 

@@ -802,7 +802,7 @@ export class PricingComponent implements AfterViewInit {
                   this.authService.markAsPaid();
                   this.onboardingDetails = {
                     tempPassword: data.tempPassword || 'Esencia_Temporal_Pass',
-                    storeUrl: data.storeUrl || `http://${this.customerData.storeSlug}.katrix.online`,
+                    storeUrl: data.storeUrl || `http://${this.customerData.storeSlug}.katrix.com.ar`,
                     storeSlug: data.storeSlug || this.customerData.storeSlug,
                     storeName: data.storeName || this.customerData.storeName
                   };

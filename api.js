@@ -511,7 +511,7 @@ router.provisionStore = function(slug, name, email, products) {
     description: '',
     phone: '',
     address: '',
-    storeUrl: `http://${slug}.katrix.online`,
+    storeUrl: `http://${slug}.katrix.com.ar`,
     products: products || []
   };
   saveDB();

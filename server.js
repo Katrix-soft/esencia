@@ -163,10 +163,10 @@ function generateOnboardingEmails(cardFormData, orderId, requestHost) {
       if (requestHost.includes('localhost') || requestHost.includes('127.0.0.1')) {
         origin = 'http://localhost:4200';
       } else {
-        origin = `https://katrix.online`; // Base domain for admin
+        origin = `https://esencia.katrix.com.ar`; // Base domain for admin
       }
     }
-    const storeUrl = `http://${storeSlug}.katrix.online`;
+    const storeUrl = `http://${storeSlug}.katrix.com.ar`;
     
     const tempPassword = `Esencia_${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
     const paymentDate = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });

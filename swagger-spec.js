@@ -1,5 +1,5 @@
 const PLANS = [
-  { id:'semilla', name:'Plan Semilla', price:11900, currency:'ARS', recommended:false, features:['Catálogo ilimitado','Subdominio propio (tu-marca.katrix.online)','Panel de administración','Emails de onboarding automáticos','Soporte básico'] },
+  { id:'semilla', name:'Plan Semilla', price:11900, currency:'ARS', recommended:false, features:['Catálogo ilimitado','Subdominio propio (tu-marca.katrix.com.ar)','Panel de administración','Emails de onboarding automáticos','Soporte básico'] },
   { id:'flor',    name:'Plan Flor',    price:24900, currency:'ARS', recommended:true,  features:['Todo de Semilla','CRM de clientes','Estadísticas de ventas','Campañas por email','Soporte prioritario 24/7'] }
 ];
 
@@ -11,8 +11,8 @@ const spec = {
     description:`
 ## Esencia API
 
-Plataforma SaaS para tiendas de perfumería online bajo el dominio **katrix.online**.
-Cada cliente recibe un subdominio propio (**slug.katrix.online**) y un panel de administración completo.
+Plataforma SaaS para tiendas de perfumería online bajo el dominio **katrix.com.ar**.
+Cada cliente recibe un subdominio propio (**slug.katrix.com.ar**) y un panel de administración completo.
 
 ### Flujo completo de onboarding
 \`\`\`
@@ -23,7 +23,7 @@ Cada cliente recibe un subdominio propio (**slug.katrix.online**) y un panel de 
        - Se provisiona la tienda automáticamente
        - Se envía email de bienvenida al cliente
        - Se envía notificación interna a Katrix
-5. El cliente accede a su panel en katrix.online
+5. El cliente accede a su panel en esencia.katrix.com.ar
 \`\`\`
 
 ### Autenticación
@@ -33,11 +33,11 @@ Los endpoints de administración requieren el header:
 Los endpoints públicos (planes, tienda pública, productos) no requieren auth.
 
 ### Subdominios
-- Tienda pública: \`http://slug.katrix.online\`
-- Panel admin: \`http://katrix.online/admin\`
-- Esta API: \`http://katrix.online/api\`
+- Tienda pública: \`http://slug.katrix.com.ar\`
+- Panel admin: \`https://esencia.katrix.com.ar/admin\`
+- Esta API: \`https://api.katrix.com.ar/api\`
     `,
-    contact:{ name:'Katrix Dev', email:'igsrdev@katrix.com.ar', url:'https://katrix.online' },
+    contact:{ name:'Katrix Dev', email:'igsrdev@katrix.com.ar', url:'https://esencia.katrix.com.ar' },
     license:{ name:'MIT' }
   },
   servers:[
@@ -74,13 +74,13 @@ Los endpoints públicos (planes, tienda pública, productos) no requieren auth.
         type:'object',
         description:'Tienda de un cliente en la plataforma Esencia',
         properties:{
-          slug:{ type:'string', example:'aromas-del-sur', description:'Identificador único. Se convierte en subdominio: aromas-del-sur.katrix.online' },
+          slug:{ type:'string', example:'aromas-del-sur', description:'Identificador único. Se convierte en subdominio: aromas-del-sur.katrix.com.ar' },
           name:{ type:'string', example:'Aromas del Sur', description:'Nombre público de la tienda' },
           description:{ type:'string', example:'Decants y perfumes de nicho con envío a todo el país' },
           phone:{ type:'string', example:'+54 11 1234-5678' },
           email:{ type:'string', format:'email', example:'contacto@aromasdelsur.com' },
           address:{ type:'string', example:'Av. Corrientes 1234, CABA' },
-          storeUrl:{ type:'string', example:'http://aromas-del-sur.katrix.online' },
+          storeUrl:{ type:'string', example:'http://aromas-del-sur.katrix.com.ar' },
           plan:{ type:'string', enum:['semilla','flor'], example:'semilla' },
           createdAt:{ type:'string', format:'date-time' }
         }
@@ -133,7 +133,7 @@ Los endpoints públicos (planes, tienda pública, productos) no requieren auth.
           status:{ type:'string', enum:['processed','approved','in_process','pending','rejected'], example:'processed' },
           status_detail:{ type:'string', example:'accredited' },
           tempPassword:{ type:'string', example:'Esencia_AB12CD', description:'Contraseña temporal generada para el panel admin. Se envía por email.' },
-          storeUrl:{ type:'string', example:'http://aromas-del-sur.katrix.online', description:'URL pública de la tienda recién creada' },
+          storeUrl:{ type:'string', example:'http://aromas-del-sur.katrix.com.ar', description:'URL pública de la tienda recién creada' },
           storeSlug:{ type:'string', example:'aromas-del-sur' },
           storeName:{ type:'string', example:'Aromas del Sur' }
         }
@@ -291,7 +291,7 @@ También incluye los planes disponibles para que el frontend pueda inicializar t
         responses:{
           201:{
             description:'✅ Pago aprobado y tienda provisionada',
-            content:{ 'application/json':{ schema:{ '$ref':'#/components/schemas/PaymentResponse' }, example:{ id:'ORD-12345', status:'processed', tempPassword:'Esencia_AB12CD', storeUrl:'http://aromas-del-sur.katrix.online', storeSlug:'aromas-del-sur', storeName:'Aromas del Sur' } } }
+            content:{ 'application/json':{ schema:{ '$ref':'#/components/schemas/PaymentResponse' }, example:{ id:'ORD-12345', status:'processed', tempPassword:'Esencia_AB12CD', storeUrl:'http://aromas-del-sur.katrix.com.ar', storeSlug:'aromas-del-sur', storeName:'Aromas del Sur' } } }
           },
           500:{ description:'❌ Error al procesar el pago (token inválido, saldo insuficiente, error de red)', content:{ 'application/json':{ schema:{ '$ref':'#/components/schemas/Error' } } } }
         }
@@ -304,7 +304,7 @@ También incluye los planes disponibles para que el frontend pueda inicializar t
         description:`Endpoint que Mercado Pago llama cuando cambia el estado de una Order o pago.
 
 ### Configuración en el Panel de MP
-- **URL:** \`https://katrix.online/api/webhook\`
+- **URL:** \`https://api.katrix.com.ar/webhook\`
 - **Eventos a suscribir:** \`Orders\`
 
 ### Validación de firma HMAC
@@ -341,7 +341,7 @@ MP reintenta el webhook si no recibe 200. Por eso siempre respondemos \`200\` in
       get:{
         tags:['🏪 Tiendas'],
         summary:'Obtener info pública de una tienda',
-        description:`Retorna los datos públicos de la tienda. Este endpoint es consumido por la vista pública \`slug.katrix.online\` para mostrar el nombre, descripción y datos de contacto.
+        description:`Retorna los datos públicos de la tienda. Este endpoint es consumido por la vista pública \`slug.katrix.com.ar\` para mostrar el nombre, descripción y datos de contacto.
 
 **Sin autenticación requerida.**`,
         parameters:[{ name:'slug', in:'path', required:true, schema:{ type:'string' }, example:'aromas-del-sur' }],
