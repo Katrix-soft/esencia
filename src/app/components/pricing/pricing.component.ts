@@ -214,27 +214,59 @@ declare var Swal: any;
             </div>
 
             <!-- Paso 2: Mercado Pago Brick -->
-            <div [style.display]="checkoutStep === 'payment' ? 'block' : 'none'" id="paymentBrick_container">
+            <div [style.display]="(checkoutStep === 'payment' && !paymentSuccess) ? 'block' : 'none'" id="paymentBrick_container">
               <!-- El SDK de Mercado Pago renderizará aquí -->
             </div>
 
           </div>
           
           <div class="success-overlay" *ngIf="paymentSuccess">
-            <span class="material-symbols-outlined check-icon">check_circle</span>
-            <h3 style="font-size: 1.5rem; color: #2e3230; font-weight: 700; margin-bottom: 0.25rem;">¡Tu Tienda está Lista!</h3>
-            <p style="color: #666; font-size: 0.95rem; margin-bottom: 1rem;">Hemos procesado el pago y aprovisionado tu espacio digital.</p>
+            <span class="material-symbols-outlined check-icon animate-bounce">check_circle</span>
+            <h3 class="success-title">¡Tu Tienda está Lista!</h3>
+            <p class="success-subtitle">Hemos procesado el pago y aprovisionado tu espacio digital.</p>
             
             <div class="onboarding-details-card">
-              <h4>Detalles de Acceso</h4>
-              <p><strong>Nombre de la Tienda:</strong> {{ customerData.storeName || authService.storeInfo.name }}</p>
-              <p><strong>Enlace Público:</strong> <a href="http://{{ onboardingDetails.storeUrl }}" target="_blank">{{ onboardingDetails.storeUrl }}</a></p>
-              <p><strong>Usuario del Panel:</strong> {{ authService.email }}</p>
-              <p><strong>Contraseña Temporal:</strong> <code>{{ onboardingDetails.tempPassword }}</code></p>
+              <div class="details-card-header">
+                <span class="material-symbols-outlined">key</span>
+                <h4>Detalles de Acceso</h4>
+              </div>
+              
+              <div class="detail-row">
+                <span class="detail-label">Nombre de la Tienda</span>
+                <span class="detail-value highlight-value">{{ customerData.storeName || authService.storeInfo.name }}</span>
+              </div>
+              
+              <div class="detail-row">
+                <span class="detail-label">Enlace Público</span>
+                <div class="detail-value-wrapper">
+                  <a class="store-link" href="http://{{ onboardingDetails.storeUrl }}" target="_blank">
+                    {{ onboardingDetails.storeUrl }}
+                    <span class="material-symbols-outlined open-icon">open_in_new</span>
+                  </a>
+                </div>
+              </div>
+
+              <div class="detail-divider"></div>
+              
+              <div class="detail-row">
+                <span class="detail-label">Usuario (Email)</span>
+                <span class="detail-value">{{ authService.email }}</span>
+              </div>
+              
+              <div class="detail-row">
+                <span class="detail-label">Contraseña Temporal</span>
+                <div class="password-badge-container">
+                  <code class="temp-password">{{ onboardingDetails.tempPassword }}</code>
+                  <button class="btn-copy-mini" (click)="copyTempPassword()" title="Copiar Contraseña">
+                    <span class="material-symbols-outlined">content_copy</span>
+                  </button>
+                </div>
+              </div>
             </div>
             
-            <button class="btn-solid active-scale" (click)="enterAdminPanel()" style="width: 100%; padding: 0.9rem; border-radius: 0.75rem; background: var(--color-primary); color: white; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 12px rgba(74,124,89,0.2); margin-top: auto;">
-              Ir al Panel de Control
+            <button class="btn-panel-submit active-scale" (click)="enterAdminPanel()">
+              <span>Ir al Panel de Control</span>
+              <span class="material-symbols-outlined">arrow_forward</span>
             </button>
           </div>
         </div>
@@ -478,58 +510,167 @@ declare var Swal: any;
       justify-content: center;
       text-align: center;
       z-index: 10;
-      padding: 2.5rem;
-      animation: fadeIn 0.3s ease;
+      padding: 2.25rem 2rem;
+      animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-sizing: border-box;
       overflow-y: auto;
     }
     .success-overlay .check-icon {
-      font-size: 3.5rem;
+      font-size: 3.8rem;
       color: var(--color-primary);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      filter: drop-shadow(0 4px 8px rgba(74,124,89,0.15));
+    }
+    .success-title {
+      font-family: var(--font-headline);
+      font-size: 1.6rem;
+      color: var(--color-on-background);
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .success-subtitle {
+      color: var(--color-on-surface-variant);
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+      line-height: 1.4;
+      max-width: 90%;
     }
     .onboarding-details-card {
-      background: #faf9f6;
-      border: 1px solid #e5e0d8;
-      border-radius: 1rem;
+      background: #faf8f5;
+      border: 1px solid #e2ded7;
+      border-radius: 1.25rem;
       padding: 1.25rem;
       width: 100%;
       text-align: left;
       box-sizing: border-box;
-      margin-top: 1rem;
       margin-bottom: 1.5rem;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+      box-shadow: 0 4px 12px rgba(46,50,48,0.02);
     }
-    .onboarding-details-card h4 {
-      margin-top: 0;
-      color: var(--color-primary);
-      font-weight: 700;
-      border-bottom: 1px solid #e5e0d8;
+    .details-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #e8e4dc;
       padding-bottom: 0.5rem;
-      margin-bottom: 0.75rem;
-      font-size: 1rem;
-    }
-    .onboarding-details-card p {
-      margin: 0.45rem 0;
-      font-size: 0.9rem;
-      color: #374151;
-      line-height: 1.5;
-    }
-    .onboarding-details-card a {
       color: var(--color-primary);
-      font-weight: bold;
+    }
+    .details-card-header span {
+      font-size: 1.2rem;
+    }
+    .details-card-header h4 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0.6rem 0;
+      font-size: 0.9rem;
+      gap: 1rem;
+    }
+    .detail-divider {
+      height: 1px;
+      background: #e8e4dc;
+      margin: 0.8rem 0;
+    }
+    .detail-label {
+      color: var(--color-on-surface-variant);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .detail-value {
+      color: var(--color-on-background);
+      font-weight: 700;
+    }
+    .detail-value.highlight-value {
+      color: var(--color-primary);
+    }
+    .detail-value-wrapper {
+      display: flex;
+      align-items: center;
+    }
+    .store-link {
+      color: var(--color-primary) !important;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: opacity 0.2s ease;
+    }
+    .store-link:hover {
+      opacity: 0.8;
       text-decoration: underline;
     }
-    .onboarding-details-card code {
-      background: #e5e7eb;
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
+    .store-link .open-icon {
+      font-size: 0.95rem;
+    }
+    .password-badge-container {
+      display: flex;
+      align-items: center;
+      background: #eae7e0;
+      padding: 0.2rem 0.5rem 0.2rem 0.75rem;
+      border-radius: 0.5rem;
+      gap: 0.5rem;
+      border: 1px solid #dcd8d0;
+    }
+    .temp-password {
       font-family: monospace;
       font-size: 0.9rem;
-      font-weight: bold;
-      color: #1f2937;
+      font-weight: 700;
+      color: #2e3230;
+      letter-spacing: 0.05em;
     }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .btn-copy-mini {
+      background: none;
+      border: none;
+      padding: 0.2rem;
+      cursor: pointer;
+      color: #6b6358;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.25rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-copy-mini:hover {
+      background: rgba(0,0,0,0.05);
+      color: var(--color-primary);
+    }
+    .btn-copy-mini span {
+      font-size: 1rem;
+    }
+    .btn-panel-submit {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(74,124,89,0.25);
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+    .btn-panel-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(74,124,89,0.35);
+      background: #3e6b4b;
+    }
+    .btn-panel-submit span {
+      font-size: 1rem;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .auth-container { display: flex; flex-direction: column; gap: 1.5rem; padding: 0.5rem 0; }
     .auth-tabs {
       display: flex;
@@ -672,6 +813,22 @@ export class PricingComponent implements AfterViewInit {
     this.authService.showAdminView = true;
     this.authService.saveSession();
     this.closePaymentModal();
+  }
+
+  copyTempPassword() {
+    if (!this.onboardingDetails.tempPassword) return;
+    navigator.clipboard.writeText(this.onboardingDetails.tempPassword).then(() => {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Contraseña copiada',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }
+    });
   }
 
   simulateLogin() {
