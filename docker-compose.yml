@@ -1,0 +1,70 @@
+# docker-compose.yml — Entorno de desarrollo completo con PostgreSQL
+# Uso: docker-compose up -d
+# Incluye: App Node.js + PostgreSQL + Adminer (UI para ver la DB)
+
+version: '3.9'
+
+services:
+  # ============================
+  # Aplicación Principal (Node.js + Angular)
+  # ============================
+  app:
+    build: .
+    container_name: esencia_app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://esencia:esencia_pass@postgres:5432/esencia_db
+      JWT_SECRET: dev-jwt-secret-CHANGE-IN-PROD
+      JWT_EXPIRES_IN: 15m
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
+      MERCADOPAGO_PUBLIC_KEY: ${MERCADOPAGO_PUBLIC_KEY}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+      WEBHOOK_SECRET_API: ${WEBHOOK_SECRET_API}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./emails:/app/emails  # Persistir emails de fallback local
+    restart: unless-stopped
+
+  # ============================
+  # PostgreSQL 16
+  # ============================
+  postgres:
+    image: postgres:16-alpine
+    container_name: esencia_postgres
+    environment:
+      POSTGRES_USER: esencia
+      POSTGRES_PASSWORD: esencia_pass
+      POSTGRES_DB: esencia_db
+    ports:
+      - "5432:5432"           # Acceso directo desde el host (dev)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U esencia -d esencia_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================
+  # Adminer — UI para ver la DB en el navegador
+  # Acceder en: http://localhost:8080
+  # Server: postgres | User: esencia | Pass: esencia_pass | DB: esencia_db
+  # ============================
+  adminer:
+    image: adminer:latest
+    container_name: esencia_adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
