@@ -1,36 +1,39 @@
-# Esencia SaaS — Dockerfile Multi-stage
+# Dockerfile raíz — Build completo: Angular frontend + Express backend
+# Easypanel o Docker build desde la raíz del monorepo.
+
+# ─────────────────────────────────────
 # Stage 1: Build de Angular (frontend)
-FROM node:20-alpine AS builder
+# ─────────────────────────────────────
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 
-# Instalar dependencias Angular
 COPY package*.json ./
 RUN npm install
+
 COPY angular.json tsconfig.json tsconfig.app.json ./
 COPY src/ ./src/
+
 RUN npm run build
 
-# Stage 2: Backend + Frontend compilado
+# ─────────────────────────────────────
+# Stage 2: Backend Node.js (producción)
+# ─────────────────────────────────────
 FROM node:20-alpine
 WORKDIR /app
 
-# Instalar dependencias del backend
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install --omit=dev
+# Instalar solo dependencias de producción del backend
+COPY backend/package*.json ./
+RUN npm install --omit=dev
 
-# Copiar código del backend
-COPY backend/ ./backend/
+# Copiar el código completo del backend
+COPY backend/ ./
 
-# Copiar build de Angular al lugar donde server.js lo espera
-COPY --from=builder /app/dist/ ./dist/
+# Copiar el frontend compilado al lugar donde server.js lo sirve (../dist)
+COPY --from=frontend-builder /app/dist/ ../dist/
 
-# Copiar configuraciones de entorno (se sobreescriben en Easypanel)
-COPY .env* ./
-
-# Crear directorio para emails de fallback
-RUN mkdir -p /app/backend/emails
+# Directorio para emails fallback
+RUN mkdir -p /app/emails
 
 EXPOSE 3000
 
-# Entrypoint: correr migraciones automáticas + servidor
-CMD ["node", "backend/server.js"]
+CMD ["node", "server.js"]
