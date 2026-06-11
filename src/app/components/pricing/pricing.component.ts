@@ -831,25 +831,24 @@ export class PricingComponent implements AfterViewInit {
     });
   }
 
-  simulateLogin() {
+  async simulateLogin() {
     if (!this.loginEmail) return;
     
-    const hasAlreadyPaid = this.authService.login(this.loginEmail);
+    const hasAlreadyPaid = await this.authService.login(this.loginEmail);
     
     if (hasAlreadyPaid) {
-      this.paymentSuccess = true;
       if (typeof Swal !== 'undefined') {
         Swal.fire({
           icon: 'success',
           title: '¡Sesión Iniciada!',
           text: 'Redirigiendo a tu panel de administración...',
-          timer: 2000,
+          timer: 1500,
           showConfirmButton: false
         });
       }
       setTimeout(() => {
         this.closePaymentModal();
-      }, 2000);
+      }, 1500);
     } else {
       // Si no pagó, completamos sus datos y abrimos la pasarela de Mercado Pago
       this.customerData.firstName = this.authService.firstName;

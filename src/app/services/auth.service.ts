@@ -84,28 +84,44 @@ export class AuthService {
     }
   }
 
-  login(email: string): boolean {
+  async login(email: string): Promise<boolean> {
     this.email = email;
     this.isLoggedIn = true;
     
-    // Si inicia sesión con admin@perfumeria.com, simulamos que YA pagó
-    if (email.toLowerCase() === 'admin@perfumeria.com') {
-      this.hasPaid = true;
-      this.showAdminView = true;
-      this.firstName = 'Admin';
-      this.lastName = 'Esencia';
-      this.storeInfo.email = email;
-    } else {
-      // Para cualquier otro email
-      this.hasPaid = false;
-      this.showAdminView = false;
-      this.firstName = email.split('@')[0];
-      this.lastName = '';
-      this.storeInfo.email = email;
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.hasPaid) {
+          this.hasPaid = true;
+          this.showAdminView = true;
+          this.firstName = data.firstName;
+          this.lastName = data.lastName;
+          if (data.storeInfo) {
+            this.storeInfo = { ...this.storeInfo, ...data.storeInfo };
+          }
+          this.saveSession();
+          return true;
+        }
+      }
+    } catch (e) {
+      console.error('Error durante el login en backend:', e);
     }
     
+    // Fallback si no ha pagado o hay un fallo de comunicación
+    this.hasPaid = false;
+    this.showAdminView = false;
+    this.firstName = email.split('@')[0];
+    this.lastName = '';
+    this.storeInfo.email = email;
     this.saveSession();
-    return this.hasPaid;
+    return false;
   }
 
   register(firstName: string, lastName: string, email: string, storeName?: string, storeSlug?: string) {

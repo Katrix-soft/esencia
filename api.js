@@ -529,6 +529,52 @@ router.provisionStore = function(slug, name, email, products) {
   return storesDB[slug];
 };
 
+// ============================================================
+// AUTENTICACIÓN / INICIO DE SESIÓN
+// ============================================================
+router.post('/auth/login', (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Email requerido' });
+  }
+
+  // Buscar si hay alguna tienda con este email registrado
+  const store = Object.values(storesDB).find(s => s.email && s.email.toLowerCase() === email.toLowerCase());
+  
+  if (store) {
+    return res.json({
+      hasPaid: true,
+      storeInfo: store,
+      firstName: store.name || email.split('@')[0],
+      lastName: ''
+    });
+  } else {
+    // Si no existe, simulamos si es el admin por defecto
+    if (email.toLowerCase() === 'admin@perfumeria.com') {
+      return res.json({
+        hasPaid: true,
+        storeInfo: {
+          name: 'Mi Perfumería Esencia',
+          description: 'Fragancias exclusivas y decants seleccionados.',
+          slug: 'mi-perfumeria',
+          phone: '+54 11 9876-5432',
+          email: 'admin@perfumeria.com',
+          address: 'Av. Alvear 1850, CABA, Argentina',
+          storeUrl: 'http://mi-perfumeria.katrix.com.ar',
+          products: []
+        },
+        firstName: 'Admin',
+        lastName: 'Esencia'
+      });
+    }
+    
+    // Si no existe ninguna tienda para ese email, no ha pagado
+    return res.json({
+      hasPaid: false
+    });
+  }
+});
+
 router.swaggerSpec = swaggerSpec;
 router.PLANS = PLANS;
 
