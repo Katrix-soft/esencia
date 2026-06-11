@@ -440,7 +440,18 @@ function authMiddleware(req, res, next) {
       message: 'Se requiere un token Bearer en el header Authorization para acceder a este recurso administrativo.'
     });
   }
-  // Para la demo, permitimos cualquier Bearer token.
+  
+  const token = authHeader.split(' ')[1];
+  const apiSecret = process.env.WEBHOOK_SECRET;
+  
+  // Validar el token contra el secreto configurado en el entorno
+  if (apiSecret && token !== apiSecret) {
+    return res.status(403).json({
+      error: 'Prohibido',
+      message: 'El token provisto es inválido.'
+    });
+  }
+  
   next();
 }
 

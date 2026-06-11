@@ -41,11 +41,11 @@ graph TD
 Los endpoints que modifican o leen información confidencial (POST, PUT, DELETE sobre tiendas o productos) requieren autenticación mediante cabeceras HTTP estándares:
 
 * **Header**: \`Authorization: Bearer <token_de_acceso>\`
-* **Token de Demo/Desarrollo**: Por compatibilidad y velocidad de pruebas, puedes usar: \`Esencia_Demo_Token_2026\`
+* **Token en Producción y Desarrollo**: El valor del token debe ser **exactamente** el valor configurado en la variable de entorno \`WEBHOOK_SECRET\` en tu archivo \`.env\` o en Easypanel.
 
 #### Ejemplo cURL de Endpoint Protegido:
 \`\`\`bash
-curl -H "Authorization: Bearer Esencia_Demo_Token_2026" https://api.katrix.com.ar/api/stores
+curl -H "Authorization: Bearer <TU_WEBHOOK_SECRET>" https://api.katrix.com.ar/api/stores
 \`\`\`
 
 ---
