@@ -35,6 +35,9 @@ import { AuthService } from '../../services/auth.service';
             </button>
           </ng-container>
           <ng-template #guestActions>
+            <button class="btn-login active-scale" (click)="openLogin()">
+              Iniciar Sesión
+            </button>
             <button class="btn-primary btn-shimmer active-scale" (click)="scrollTo('precios')">Prueba Gratis</button>
           </ng-template>
         </div>
@@ -151,6 +154,22 @@ import { AuthService } from '../../services/auth.service';
       box-shadow: 0 4px 20px rgba(46,50,48,0.06);
     }
     .btn-primary:hover { background: var(--color-on-primary-fixed-variant); }
+    .btn-login {
+      background: transparent;
+      color: var(--color-primary);
+      border: 1px solid var(--color-primary);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 0.75rem;
+    }
+    .btn-login:hover {
+      background: var(--color-primary);
+      color: white;
+    }
 
     /* Search overlay */
     .search-overlay {
@@ -261,6 +280,10 @@ export class NavbarComponent {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  openLogin(): void {
+    this.authService.openLoginModalEmitter.emit();
   }
 
   openSearch(): void {
