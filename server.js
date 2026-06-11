@@ -296,10 +296,20 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
 
     const response = await createOrderDirect(orderBody);
     
-    // Generate onboarding emails on success
+    // Generar emails de onboarding y aprovisionar tienda en tiempo real
     let onboarding = {};
     if (response.id) {
       onboarding = generateOnboardingEmails(req.body, response.id, req.headers.host) || {};
+      
+      if (req.body.store_slug) {
+        apiRouter.provisionStore(
+          req.body.store_slug,
+          req.body.store_name || 'Mi Perfumería',
+          req.body.payer?.email || 'cliente@esencia.com',
+          []
+        );
+        console.log(`[Tiempo Real] Tienda provisionada: ${req.body.store_slug} para ${req.body.payer?.email}`);
+      }
     }
     
     res.status(201).json({ ...response, ...onboarding });
@@ -317,19 +327,28 @@ app.post(['/process_payment', '/api/payments/create'], async (req, res) => {
 
     const response = await createOrderDirect(orderBody);
     console.log('Respuesta de Order directa:', response);
-    // El frontend espera el payment.id en caso de éxito para el Swal
+    
     let paymentId = response.id;
     if (response.transactions && response.transactions.payments && response.transactions.payments.length > 0) {
       paymentId = response.transactions.payments[0].id || response.id;
     }
     
-    // Generate onboarding emails on success
+    // Generar emails de onboarding y aprovisionar tienda en tiempo real
     let onboarding = {};
     if (paymentId) {
       onboarding = generateOnboardingEmails(req.body, paymentId, req.headers.host) || {};
+      
+      if (req.body.store_slug) {
+        apiRouter.provisionStore(
+          req.body.store_slug,
+          req.body.store_name || 'Mi Perfumería',
+          req.body.payer?.email || 'cliente@esencia.com',
+          []
+        );
+        console.log(`[Tiempo Real] Tienda provisionada: ${req.body.store_slug} para ${req.body.payer?.email}`);
+      }
     }
     
-    // Enviamos la respuesta, el frontend extrae .id o .status
     res.status(201).json({ ...response, id: paymentId, ...onboarding });
   } catch (error) {
     console.error('Error al crear la Order directa:', JSON.stringify(error, null, 2));
