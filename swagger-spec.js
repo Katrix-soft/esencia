@@ -1,6 +1,7 @@
 const PLANS = [
   { id:'semilla', name:'Plan Semilla', price:11900, currency:'ARS', recommended:false, features:['Catálogo ilimitado','Subdominio propio (tu-marca.katrix.com.ar)','Panel de administración','Emails de onboarding automáticos','Soporte básico'] },
-  { id:'flor',    name:'Plan Flor',    price:24900, currency:'ARS', recommended:true,  features:['Todo de Semilla','CRM de clientes','Estadísticas de ventas','Campañas por email','Soporte prioritario 24/7'] }
+  { id:'flor',    name:'Plan Flor',    price:24900, currency:'ARS', recommended:true,  features:['Todo de Semilla','CRM de clientes','Estadísticas de ventas','Campañas por email','Soporte prioritario 24/7'] },
+  { id:'extracto', name:'Plan Extracto', price:35000, currency:'ARS', recommended:false, features:['Todo de Flor','Asistente de IA Integrado','Analítica de Tendencias','Marketing Automatizado','Soporte prioritario 24/7'] }
 ];
 
 const spec = {
