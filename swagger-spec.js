@@ -71,30 +71,104 @@ curl -X POST "http://localhost:3000/webhook?data.id=123456&type=order" \\
   -d '{"id": "123456", "type": "order"}'
 \`\`\`
 
+### ⚠️ IMPORTANTE: Diferencia de Dominios (¡Evitar errores en cURL!)
+* **Frontend (Landing / Admin)**: \`https://esencia.katrix.com.ar\` (Sirve los archivos estáticos de Angular. **NO** tiene los endpoints de la API expuestos directamente aquí).
+* **API Backend (Servidor Express)**: \`https://api.katrix.com.ar\` (Es donde se ejecutan los endpoints y Swagger UI).
+> Si intentas ejecutar \`curl https://esencia.katrix.com.ar/api/plans\` recibirás un error de enrutamiento o una página HTML de error de Nginx. Siempre debes usar \`https://api.katrix.com.ar/api/...\` para peticiones de API de producción.
+
 ---
 
 ### 💾 4. Persistencia de Datos
-* **Base de datos**: Usamos un motor embebido JSON ultra-rápido en \`stores-db.json\`.
-* **Despliegue en Docker/Easypanel**: La base de datos se almacena dinámicamente en el directorio definido por la variable \`DATA_DIR\`. Para evitar pérdida de datos en despliegues automáticos, Easypanel monta un volumen persistente en el contenedor en la ruta \`/app/data\`.
+* **Base de datos**: Usamos un motor embebido JSON en \`stores-db.json\`.
+* **Despliegue en Docker**: Los datos se almacenan en la ruta definida por \`DATA_DIR\` persistidos por volúmenes de Easypanel.
 
 ---
 
-### 🚀 5. Lista de Comandos Rápidos cURL (Copy-Paste)
+### 🚀 5. Consola Educativa cURL (Copy-Paste Rápido)
 
-#### Obtener Planes Disponibles:
-\`\`\`bash
-curl -s http://localhost:3000/api/plans
-\`\`\`
+Para facilitar el aprendizaje de trainees y juniors, aquí tienes los comandos \`curl\` exactos. Puedes ejecutarlos directamente en tu consola:
 
-#### Validar Estado de Salud del Backend y DB:
-\`\`\`bash
-curl -s http://localhost:3000/api/health
-\`\`\`
+#### A. Obtener Planes Disponibles (Público)
+* **Local**:
+  \`\`\`bash
+  curl -s -X GET http://localhost:3000/api/plans
+  \`\`\`
+* **Producción**:
+  \`\`\`bash
+  curl -s -X GET https://api.katrix.com.ar/api/plans
+  \`\`\`
 
-#### Obtener Tienda por su Slug:
-\`\`\`bash
-curl -s http://localhost:3000/api/stores/aromas-del-sur
-\`\`\`
+#### B. Validar Estado de Salud del Backend (Público)
+* **Local**:
+  \`\`\`bash
+  curl -s -X GET http://localhost:3000/api/health
+  \`\`\`
+* **Producción**:
+  \`\`\`bash
+  curl -s -X GET https://api.katrix.com.ar/api/health
+  \`\`\`
+
+#### C. Iniciar Sesión en la Tienda (Público)
+* **Local**:
+  \`\`\`bash
+  curl -s -X POST http://localhost:3000/api/auth/login \\
+    -H "Content-Type: application/json" \\
+    -d '{"email": "nachin@katrix.com.ar"}'
+  \`\`\`
+* **Producción**:
+  \`\`\`bash
+  curl -s -X POST https://api.katrix.com.ar/api/auth/login \\
+    -H "Content-Type: application/json" \\
+    -d '{"email": "nachin@katrix.com.ar"}'
+  \`\`\`
+
+#### D. Crear / Aprovisionar Tienda (Privado - Requiere Bearer Token)
+* **Local**:
+  \`\`\`bash
+  curl -s -X POST http://localhost:3000/api/stores \\
+    -H "Authorization: Bearer 9ffdc0452246247666f9f7bf233d2059a2f1cfe40068d15bee7fe09b296bd2ad5de57442315d20bfc2fa46f6abeab11ec76126c143d5888c3707362e302db8b6" \\
+    -H "Content-Type: application/json" \\
+    -d '{"slug": "tienda-junior", "name": "Tienda Escuela", "email": "junior@katrix.com.ar"}'
+  \`\`\`
+* **Producción**:
+  \`\`\`bash
+  curl -s -X POST https://api.katrix.com.ar/api/stores \\
+    -H "Authorization: Bearer <TU_WEBHOOK_SECRET_API>" \\
+    -H "Content-Type: application/json" \\
+    -d '{"slug": "tienda-junior", "name": "Tienda Escuela", "email": "junior@katrix.com.ar"}'
+  \`\`\`
+
+#### E. Cambiar Contraseña Administrativa (Privado - Requiere Bearer Token)
+* **Local**:
+  \`\`\`bash
+  curl -s -X POST http://localhost:3000/api/stores/tienda-junior/change-password \\
+    -H "Authorization: Bearer 9ffdc0452246247666f9f7bf233d2059a2f1cfe40068d15bee7fe09b296bd2ad5de57442315d20bfc2fa46f6abeab11ec76126c143d5888c3707362e302db8b6" \\
+    -H "Content-Type: application/json" \\
+    -d '{"password": "NuevaClaveTrainee2026"}'
+  \`\`\`
+* **Producción**:
+  \`\`\`bash
+  curl -s -X POST https://api.katrix.com.ar/api/stores/tienda-junior/change-password \\
+    -H "Authorization: Bearer <TU_WEBHOOK_SECRET_API>" \\
+    -H "Content-Type: application/json" \\
+    -d '{"password": "NuevaClaveTrainee2026"}'
+  \`\`\`
+
+#### F. Actualizar Facturación / Suspensiones (Privado - Requiere Bearer Token)
+* **Local (para marcar como deudor o rehabilitar)**:
+  \`\`\`bash
+  curl -s -X PUT http://localhost:3000/api/stores/tienda-junior/billing \\
+    -H "Authorization: Bearer 9ffdc0452246247666f9f7bf233d2059a2f1cfe40068d15bee7fe09b296bd2ad5de57442315d20bfc2fa46f6abeab11ec76126c143d5888c3707362e302db8b6" \\
+    -H "Content-Type: application/json" \\
+    -d '{"paymentStatus": "unpaid"}'
+  \`\`\`
+* **Producción**:
+  \`\`\`bash
+  curl -s -X PUT https://api.katrix.com.ar/api/stores/tienda-junior/billing \\
+    -H "Authorization: Bearer <TU_WEBHOOK_SECRET_API>" \\
+    -H "Content-Type: application/json" \\
+    -d '{"paymentStatus": "unpaid"}'
+  \`\`\`
     `,
     contact:{ name:'Katrix Dev', email:'igsrdev@katrix.com.ar', url:'https://esencia.katrix.com.ar' },
     license:{ name:'MIT' }
