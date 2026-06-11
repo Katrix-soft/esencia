@@ -363,7 +363,7 @@ app.post('/webhook', async (req, res) => {
   try {
     const xSignature = req.headers['x-signature'] || '';
     const xRequestId = req.headers['x-request-id'] || '';
-    const webhookSecret = process.env.WEBHOOK_SECRET || '';
+    const webhookSecret = process.env.WEBHOOK_SECRET || process.env.MERCADOPAGO_ACCESS_TOKEN || '';
 
     let rawDataId = req.query['data.id'] || req.body?.data?.id || req.body?.id;
     let dataId = rawDataId ? String(rawDataId) : '';
