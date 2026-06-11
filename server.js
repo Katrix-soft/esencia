@@ -4,12 +4,15 @@ const cors = require('cors');
 const crypto = require('crypto');
 const fs = require('fs');
 const { MercadoPagoConfig, Order } = require('mercadopago');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const apiRouter = require('./api');
 
 // Cargar variables de entorno si existe el archivo .env (útil en dev)
 require('dotenv').config();
 
 const app = express();
+app.enable('trust proxy');
 const PORT = process.env.PORT || 3000;
 
 // Configurar SDK de Mercado Pago
@@ -17,6 +20,24 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '' 
 });
 const orderAPI = new Order(client);
+
+// ============================================================
+// SEGURIDAD DEL SERVIDOR (Helmet & Rate Limiting)
+// ============================================================
+// Cabeceras de seguridad HTTP (deshabilitamos CSP para evitar conflictos con los estilos inline de Swagger UI)
+app.use(helmet({
+  contentSecurityPolicy: false
+}));
+
+// Limitador general de peticiones en la API para prevenir abuso y ataques DoS
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 300, // Máximo 300 peticiones por IP en el periodo
+  message: { error: 'Demasiadas peticiones desde esta IP. Por favor intenta de nuevo en 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api', generalLimiter);
 
 app.use(cors());
 app.use(express.json());
@@ -26,6 +47,11 @@ app.use(express.urlencoded({ extended: true }));
 // API ROUTER (planes, tiendas, productos, config, docs)
 // ============================================================
 app.use('/api', apiRouter);
+
+// Redireccionar /docs a la documentación oficial en /api/docs
+app.get('/docs', (req, res) => {
+  res.redirect('/api/docs');
+});
 
 // Función helper para mapear los datos del frontend (Payment Brick) al formato de Orders API
 function mapCardFormDataToOrder(cardFormData) {
