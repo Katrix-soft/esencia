@@ -27,7 +27,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./emails:/app/emails  # Persistir emails de fallback local
+      - ./backend/emails:/app/backend/emails  # Persistir emails de fallback local
     restart: unless-stopped
 
   # ============================

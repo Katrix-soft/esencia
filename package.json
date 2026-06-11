@@ -1,57 +1,33 @@
 {
   "name": "esencia-app",
   "version": "1.0.0",
+  "description": "Esencia SaaS — Frontend Angular",
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "server": "node server.js",
-    "migrate": "node db/migrate.js",
-    "seed": "node db/seed.js",
-    "test": "jest --forceExit --detectOpenHandles",
-    "test:coverage": "jest --coverage --forceExit"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": ["**/tests/**/*.test.js"],
-    "collectCoverageFrom": ["routes/**/*.js", "lib/**/*.js", "middleware/**/*.js"]
+    "ng":     "ng",
+    "start":  "ng serve",
+    "build":  "ng build",
+    "watch":  "ng build --watch --configuration development",
+    "server": "node backend/server.js",
+    "dev":    "concurrently \"npm start\" \"npm run server\""
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^17.0.0",
-    "@angular/common": "^17.0.0",
-    "@angular/compiler": "^17.0.0",
-    "@angular/core": "^17.0.0",
-    "@angular/forms": "^17.0.0",
-    "@angular/platform-browser": "^17.0.0",
-    "@angular/platform-browser-dynamic": "^17.0.0",
-    "@angular/router": "^17.0.0",
-    "axios": "^1.7.2",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.18.2",
-    "express-rate-limit": "^8.5.2",
-    "helmet": "^8.2.0",
-    "jsonwebtoken": "^9.0.3",
-    "knex": "^3.1.0",
-    "mercadopago": "^2.0.15",
-    "nodemailer": "^8.0.11",
-    "pg": "^8.11.5",
-    "rxjs": "~7.8.0",
-    "swagger-ui-express": "^5.0.1",
-    "tslib": "^2.3.0",
-    "winston": "^3.13.0",
-    "zod": "^3.23.8",
-    "zone.js": "~0.14.2"
+    "@angular/animations":              "^17.0.0",
+    "@angular/common":                  "^17.0.0",
+    "@angular/compiler":                "^17.0.0",
+    "@angular/core":                    "^17.0.0",
+    "@angular/forms":                   "^17.0.0",
+    "@angular/platform-browser":        "^17.0.0",
+    "@angular/platform-browser-dynamic":"^17.0.0",
+    "@angular/router":                  "^17.0.0",
+    "rxjs":                             "~7.8.0",
+    "tslib":                            "^2.3.0",
+    "zone.js":                          "~0.14.2"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^17.0.0",
-    "@angular/cli": "^17.0.0",
-    "@angular/compiler-cli": "^17.0.0",
-    "jest": "^29.7.0",
-    "supertest": "^7.0.0",
-    "typescript": "~5.2.2"
+    "@angular/cli":                  "^17.0.0",
+    "@angular/compiler-cli":         "^17.0.0",
+    "typescript":                    "~5.2.2"
   }
 }
