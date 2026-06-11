@@ -10,33 +10,91 @@ const spec = {
     title:'Esencia SaaS — API Completa',
     version:'1.0.0',
     description:`
-## Esencia API
+## 📚 Guía Educativa y Documentación Técnica de Esencia API
 
-Plataforma SaaS para tiendas de perfumería online bajo el dominio **katrix.com.ar**.
-Cada cliente recibe un subdominio propio (**slug.katrix.com.ar**) y un panel de administración completo.
+¡Bienvenido a la documentación de **Esencia API**! Este espacio está diseñado para que desarrolladores desde nivel Trainee hasta Senior comprendan rápidamente la arquitectura de nuestra plataforma SaaS de perfumería digital.
 
-### Flujo completo de onboarding
+---
+
+### 🌐 Arquitectura de Dominios e Infraestructura
+* **Landing Page y Panel Admin**: \`https://esencia.katrix.com.ar\`
+* **API y Swagger Docs**: \`https://api.katrix.com.ar/api/docs\`
+* **Subdominios Dinámicos de Clientes**: \`http://{slug}.katrix.com.ar\` (ej: \`http://aromas-del-sur.katrix.com.ar\`)
+
+---
+
+### 🔄 1. Flujo de Onboarding de Clientes
+Cuando un nuevo comerciante se registra y adquiere un plan, la aplicación sigue este pipeline en tiempo real:
+
+\`\`\`mermaid
+graph TD
+    A[1. GET /plans: Cliente selecciona Plan] --> B[2. GET /config: Frontend carga Llave Pública MP]
+    B --> C[3. POST /payments/create: Procesa Pago y Crea Cuenta]
+    C -->|Si es Aprobado| D[4. Aprovisionamiento Automático en DB local]
+    D --> E[5. Envío de Email de bienvenida con Clave Temporal]
+    E --> F[6. Cliente accede a su tienda y panel en esencia.katrix.com.ar]
 \`\`\`
-1. GET  /api/plans              → el usuario elige un plan
-2. GET  /api/config             → el frontend obtiene la publicKey de Mercado Pago
-3. POST /api/payments/create    → se procesa el pago (Orders API de MP)
-4. ✅  Si aprobado:
-       - Se provisiona la tienda automáticamente
-       - Se envía email de bienvenida al cliente
-       - Se envía notificación interna a Katrix
-5. El cliente accede a su panel en esencia.katrix.com.ar
+
+---
+
+### 🔑 2. Autenticación (Bearer Token)
+Los endpoints que modifican o leen información confidencial (POST, PUT, DELETE sobre tiendas o productos) requieren autenticación mediante cabeceras HTTP estándares:
+
+* **Header**: \`Authorization: Bearer <token_de_acceso>\`
+* **Token de Demo/Desarrollo**: Por compatibilidad y velocidad de pruebas, puedes usar: \`Esencia_Demo_Token_2026\`
+
+#### Ejemplo cURL de Endpoint Protegido:
+\`\`\`bash
+curl -H "Authorization: Bearer Esencia_Demo_Token_2026" https://api.katrix.com.ar/api/stores
 \`\`\`
 
-### Autenticación
-Los endpoints de administración requieren el header:
-\`Authorization: Bearer <token>\`
+---
 
-Los endpoints públicos (planes, tienda pública, productos) no requieren auth.
+### 🛡️ 3. Webhooks de Mercado Pago y Firma HMAC
+Para proteger nuestro webhook contra fraudes (peticiones falsas simulando pagos aprobados), implementamos validación criptográfica HMAC SHA-256 usando el \`WEBHOOK_SECRET\` provisto por Mercado Pago:
 
-### Subdominios
-- Tienda pública: \`http://slug.katrix.com.ar\`
-- Panel admin: \`https://esencia.katrix.com.ar/admin\`
-- Esta API: \`https://api.katrix.com.ar/api\`
+1. **Mercado Pago envía dos cabeceras**:
+   * \`x-signature\`: Contiene el timestamp (\`ts\`) y el hash de control (\`v1\`), ej: \`ts=1781137085,v1=74b56d773a29...\`
+   * \`x-request-id\`: El identificador de la transacción.
+2. **Construcción del Manifest**:
+   El servidor concatena los datos recibidos en este formato exacto:
+   \`id:{data.id};request-id:{x-request-id};ts:{ts};\`
+3. **Validación**:
+   Se calcula el HMAC SHA-256 de ese manifest usando el \`WEBHOOK_SECRET\`. Si coincide con el parámetro \`v1\` recibido, el pago es verídico y se procesa.
+
+#### 🧪 Simular Webhook en Desarrollo (cURL):
+\`\`\`bash
+curl -X POST "http://localhost:3000/webhook?data.id=123456&type=order" \\
+  -H "Content-Type: application/json" \\
+  -H "x-request-id: req-test-123" \\
+  -H "x-signature: ts=1781137085,v1=74b56d773a293ddbbd43eb166e47d7b7dc127c35f31526e0dc0057462161b019" \\
+  -d '{"id": "123456", "type": "order"}'
+\`\`\`
+
+---
+
+### 💾 4. Persistencia de Datos
+* **Base de datos**: Usamos un motor embebido JSON ultra-rápido en \`stores-db.json\`.
+* **Despliegue en Docker/Easypanel**: La base de datos se almacena dinámicamente en el directorio definido por la variable \`DATA_DIR\`. Para evitar pérdida de datos en despliegues automáticos, Easypanel monta un volumen persistente en el contenedor en la ruta \`/app/data\`.
+
+---
+
+### 🚀 5. Lista de Comandos Rápidos cURL (Copy-Paste)
+
+#### Obtener Planes Disponibles:
+\`\`\`bash
+curl -s http://localhost:3000/api/plans
+\`\`\`
+
+#### Validar Estado de Salud del Backend y DB:
+\`\`\`bash
+curl -s http://localhost:3000/api/health
+\`\`\`
+
+#### Obtener Tienda por su Slug:
+\`\`\`bash
+curl -s http://localhost:3000/api/stores/aromas-del-sur
+\`\`\`
     `,
     contact:{ name:'Katrix Dev', email:'igsrdev@katrix.com.ar', url:'https://esencia.katrix.com.ar' },
     license:{ name:'MIT' }
