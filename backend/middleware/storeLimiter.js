@@ -1,34 +1,35 @@
 // middleware/storeLimiter.js — Rate limiting específico por store slug
-// Cada tienda tiene su propio límite de 60 peticiones por minuto.
-// Esto evita que una tienda con mucho tráfico afecte a las demás.
+// express-rate-limit v7+ requiere usar ipKeyGenerator para manejar IPv6 correctamente.
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 
-// Key generator que usa el slug del store como identificador
+// Key generator que combina el slug de la tienda con la IP normalizada (IPv4/IPv6)
 const storeKeyGenerator = (req) => {
   const slug = req.params?.slug || 'unknown';
-  return `store:${slug}:${req.ip}`;
+  return `store:${slug}:${ipKeyGenerator(req)}`;
 };
 
+// Límite de lectura: 60 peticiones por minuto por tienda
 const storeLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minuto
-  max: 60,             // 60 peticiones por minuto por tienda
+  windowMs: 60 * 1000,
+  max: 60,
   keyGenerator: storeKeyGenerator,
   message: {
-    error: 'Demasiadas peticiones',
+    error:   'Demasiadas peticiones',
     message: 'Superaste el límite de peticiones para esta tienda. Intentá en 1 minuto.',
   },
   standardHeaders: true,
   legacyHeaders:   false,
-  skip: (req) => req.method === 'OPTIONS', // No limitar preflight CORS
+  skip: (req) => req.method === 'OPTIONS',
 });
 
-// Límite más estricto para endpoints de escritura (POST/PUT/DELETE)
+// Límite de escritura: 20 peticiones por minuto por tienda (POST/PUT/DELETE)
 const writeLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
   keyGenerator: storeKeyGenerator,
   message: {
-    error: 'Demasiadas escrituras',
+    error:   'Demasiadas escrituras',
     message: 'Superaste el límite de operaciones de escritura. Intentá en 1 minuto.',
   },
   standardHeaders: true,
