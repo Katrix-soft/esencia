@@ -443,10 +443,10 @@ function authMiddleware(req, res, next) {
   }
   
   const token = authHeader.split(' ')[1];
-  const apiSecret = process.env.WEBHOOK_SECRET;
+  const apiSecret = process.env.WEBHOOK_SECRET_API || process.env.WEBHOOK_SECRET || '9ffdc0452246247666f9f7bf233d2059a2f1cfe40068d15bee7fe09b296bd2ad5de57442315d20bfc2fa46f6abeab11ec76126c143d5888c3707362e302db8b6';
   
   // Validar el token contra el secreto configurado en el entorno
-  if (apiSecret && token !== apiSecret) {
+  if (token !== apiSecret) {
     return res.status(403).json({
       error: 'Prohibido',
       message: 'El token provisto es inválido.'
