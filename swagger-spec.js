@@ -41,8 +41,9 @@ Los endpoints públicos (planes, tienda pública, productos) no requieren auth.
     license:{ name:'MIT' }
   },
   servers:[
-    { url:'http://localhost:3000/api', description:'🔧 Desarrollo local (node server.js)' },
-    { url:'https://katrix.online/api', description:'🚀 Producción' }
+    { url:'http://localhost:3000/api', description:'🔧 Desarrollo local' },
+    { url:'https://api.katrix.com.ar/api', description:'🚀 Producción HTTPS' },
+    { url:'http://api.katrix.com.ar:3000/api', description:'🚀 Producción Puerto 3000' }
   ],
   tags:[
     { name:'📋 Planes', description:'Planes de suscripción. Fuente de verdad centralizada — cambiar aquí actualiza toda la app.' },
