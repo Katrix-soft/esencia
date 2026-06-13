@@ -897,10 +897,26 @@ export class PricingComponent implements AfterViewInit {
         return;
       }
 
-      // Pedimos la llave pública al backend dinámicamente
-      const configRes = await fetch(`${environment.apiUrl}/api/config`);
-      const configData = await configRes.json();
-      const publicKey = configData.publicKey || 'APP_USR-7de37b05-1fe7-4e28-b855-3aaafc4a96f4';
+      if (this.paymentBrickController) {
+        try {
+          await this.paymentBrickController.unmount();
+        } catch (unmountErr) {
+          console.warn('Error unmounting existing brick:', unmountErr);
+        }
+        this.paymentBrickController = null;
+      }
+
+      // Pedimos la llave pública al backend dinámicamente con fallback robusto
+      let publicKey = 'APP_USR-7de37b05-1fe7-4e28-b855-3aaafc4a96f4';
+      try {
+        const configRes = await fetch(`${environment.apiUrl}/api/config`);
+        const configData = await configRes.json();
+        if (configData && configData.publicKey) {
+          publicKey = configData.publicKey;
+        }
+      } catch (fetchErr) {
+        console.warn('⚠️ No se pudo obtener la llave pública del backend. Usando fallback.', fetchErr);
+      }
 
       const mp = new MercadoPago(publicKey, {
         locale: 'es-AR'
@@ -911,7 +927,7 @@ export class PricingComponent implements AfterViewInit {
         initialization: {
           amount: this.selectedAmount,
           payer: {
-            email: "",
+            email: this.customerData.email || "",
           },
         },
         customization: {
