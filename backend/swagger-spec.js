@@ -430,6 +430,34 @@ También incluye los planes disponibles para que el frontend pueda inicializar t
         }
       }
     },
+    '/pagos/v1/payment_methods':{
+      get:{
+        tags:['💳 Pagos'],
+        summary:'Obtener medios de pago disponibles',
+        description:`Consulta los medios de pago activos y habilitados en Mercado Pago.
+        
+Retorna una lista detallada con los métodos de pago (Visa, Mastercard, Rapipago, etc.) soportados por tu credencial.`,
+        responses:{
+          200:{
+            description:'Lista de medios de pago',
+            content:{
+              'application/json':{
+                schema:{
+                  type:'array',
+                  items:{
+                    type:'object'
+                  }
+                }
+              }
+            }
+          },
+          500:{
+            description:'Error al obtener medios de pago',
+            content:{ 'application/json':{ schema:{ '$ref':'#/components/schemas/Error' } } }
+          }
+        }
+      }
+    },
     '/webhook':{
       post:{
         tags:['🔔 Webhooks'],

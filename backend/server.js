@@ -3,7 +3,7 @@ const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
 const fs = require('fs');
-const { MercadoPagoConfig, Order } = require('mercadopago');
+const { MercadoPagoConfig, Order, PaymentMethod } = require('mercadopago');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const apiRouter = require('./api');
@@ -23,6 +23,7 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '' 
 });
 const orderAPI = new Order(client);
+const paymentMethodAPI = new PaymentMethod(client);
 
 // ============================================================
 // SEGURIDAD DEL SERVIDOR (Helmet & Rate Limiting)
@@ -324,6 +325,31 @@ app.post('/api/pagos/v1/payments', async (req, res) => {
   } catch (error) {
     console.error('Error al procesar la Order directa:', JSON.stringify(error, null, 2));
     res.status(500).json({ error: 'Error procesando el pago', details: error });
+  }
+});
+
+const FALLBACK_PAYMENT_METHODS = [
+  { id: 'visa', name: 'Visa', payment_type_id: 'credit_card', status: 'active' },
+  { id: 'master', name: 'Mastercard', payment_type_id: 'credit_card', status: 'active' },
+  { id: 'amex', name: 'American Express', payment_type_id: 'credit_card', status: 'active' },
+  { id: 'visa_electron', name: 'Visa Débito', payment_type_id: 'debit_card', status: 'active' },
+  { id: 'maestro', name: 'Maestro', payment_type_id: 'debit_card', status: 'active' },
+  { id: 'rapipago', name: 'Rapipago', payment_type_id: 'ticket', status: 'active' },
+  { id: 'pagofacil', name: 'Pago Fácil', payment_type_id: 'ticket', status: 'active' }
+];
+
+// Endpoint para obtener los medios de pago disponibles de Mercado Pago
+app.get(['/api/pagos/v1/payment_methods', '/api/payment_methods'], async (req, res) => {
+  try {
+    const response = await paymentMethodAPI.get();
+    res.json(response);
+  } catch (error) {
+    if (error.message?.includes('fetch failed') || error.code === 'EAI_AGAIN' || error.code === 'ENOTFOUND') {
+      console.warn('⚠️ No hay conexión a internet para obtener medios de pago de Mercado Pago. Retornando fallback estático.');
+      return res.json(FALLBACK_PAYMENT_METHODS);
+    }
+    console.error('Error al obtener medios de pago de Mercado Pago:', error);
+    res.status(500).json({ error: 'Error al obtener medios de pago', details: error });
   }
 });
 
