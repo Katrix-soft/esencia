@@ -1,25 +1,25 @@
 // api.js — Router principal: importa y monta todas las rutas modulares
 // Este archivo ya no contiene lógica de negocio — solo orquesta.
-const express       = require('express');
-const swaggerUi     = require('swagger-ui-express');
+const express = require('express');
+const swaggerUi = require('swagger-ui-express');
 const { spec: swaggerSpecOriginal, PLANS } = require('./swagger-spec');
 
 // Rutas modulares
-const authRouter     = require('./routes/auth');
-const plansRouter    = require('./routes/plans');
+const authRouter = require('./routes/auth');
+const plansRouter = require('./routes/plans');
 const { router: storesRouter } = require('./routes/stores');
 const productsRouter = require('./routes/products');
-const billingRouter  = require('./routes/billing');
-const statsRouter    = require('./routes/stats');
+const billingRouter = require('./routes/billing');
+const statsRouter = require('./routes/stats');
 
 // Infraestructura
-const knex    = require('./db/knex');
-const logger  = require('./lib/logger');
-const { cleanExpiredTokens } = require('./lib/jwt');
-const { runMigrations }      = require('./db/migrate');
-const crypto  = require('crypto');
-const fs      = require('fs');
-const path    = require('path');
+const knex = require('./db/knex');
+const logger = require('./lib/logger');
+const cleanExpiredTokens = require('./lib/jwt');
+const { runMigrations } = require('./db/migrate');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 const router = express.Router();
 
@@ -73,16 +73,16 @@ router.get('/health', async (req, res) => {
   try {
     await knex.raw('SELECT 1');
     res.json({
-      status:    'healthy',
-      database:  'postgresql (connected)',
+      status: 'healthy',
+      database: 'postgresql (connected)',
       timestamp: new Date().toISOString(),
-      uptime:    `${Math.floor(process.uptime())}s`,
+      uptime: `${Math.floor(process.uptime())}s`,
     });
   } catch (err) {
     res.status(503).json({
-      status:   'degraded',
+      status: 'degraded',
       database: 'postgresql (disconnected)',
-      error:    err.message,
+      error: err.message,
     });
   }
 });
@@ -93,19 +93,19 @@ router.get('/health', async (req, res) => {
 router.get('/config', (req, res) => {
   res.json({
     publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || '',
-    plans:     PLANS,
+    plans: PLANS,
   });
 });
 
 // ============================================================
 // RUTAS MODULARES
 // ============================================================
-router.use('/auth',        authRouter);
-router.use('/plans',       plansRouter);
-router.use('/stores',      storesRouter);
-router.use('/stores',      productsRouter);  // /stores/:slug/products
-router.use('/stores',      billingRouter);   // /stores/:slug/billing
-router.use('/stores',      statsRouter);     // /stores/:slug/stats
+router.use('/auth', authRouter);
+router.use('/plans', plansRouter);
+router.use('/stores', storesRouter);
+router.use('/stores', productsRouter);  // /stores/:slug/products
+router.use('/stores', billingRouter);   // /stores/:slug/billing
+router.use('/stores', statsRouter);     // /stores/:slug/stats
 
 // ============================================================
 // PROVISIONING (llamado desde server.js post-pago)
@@ -114,7 +114,7 @@ router.use('/stores',      statsRouter);     // /stores/:slug/stats
 const bcrypt = require('bcryptjs');
 const { sendWelcomeEmail } = require('./lib/mailer');
 
-router.provisionStore = async function(slug, name, email, products) {
+router.provisionStore = async function (slug, name, email, products) {
   try {
     const tempPassword = 'Esencia_' + crypto.randomBytes(4).toString('hex').toUpperCase();
     const passwordHash = await bcrypt.hash(tempPassword, 12);
@@ -129,10 +129,10 @@ router.provisionStore = async function(slug, name, email, products) {
       slug,
       name,
       email,
-      password_hash:  passwordHash,
-      store_url:      `http://${slug}.katrix.com.ar`,
+      password_hash: passwordHash,
+      store_url: `http://${slug}.katrix.com.ar`,
       payment_status: 'paid',
-      plan_id:        'semilla',
+      plan_id: 'semilla',
     }).returning('*');
 
     // Insertar productos iniciales si se pasan
@@ -152,7 +152,7 @@ router.provisionStore = async function(slug, name, email, products) {
 
 // Exportar spec para que server.js pueda accederlo
 router.swaggerSpec = swaggerSpec;
-router.PLANS       = PLANS;
+router.PLANS = PLANS;
 
 // ============================================================
 // INICIALIZACIÓN: Migraciones y limpieza de tokens
