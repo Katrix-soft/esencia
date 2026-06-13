@@ -354,7 +354,7 @@ app.get(['/api/pagos/v1/payment_methods', '/api/payment_methods'], async (req, r
 });
 
 // Endpoint adicional para el Card Payment Brick de Mercado Pago
-app.post(['/process_payment', '/api/payments/create'], async (req, res) => {
+app.post(['/process_payment', '/api/payments/create', '/process_order'], async (req, res) => {
   try {
     const orderBody = mapCardFormDataToOrder(req.body);
     console.log('Creando Order (process_payment) directa:', new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }), '\n', JSON.stringify(orderBody, null, 2));

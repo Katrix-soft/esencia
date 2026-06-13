@@ -941,7 +941,7 @@ export class PricingComponent implements AfterViewInit {
               formData.payer.last_name = this.customerData.lastName;
               formData.payer.email = this.customerData.email;
 
-              fetch("/process_payment", {
+              fetch(`${environment.apiUrl}/process_payment`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
