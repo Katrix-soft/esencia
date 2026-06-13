@@ -8,8 +8,11 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const apiRouter = require('./api');
 
-// Cargar variables de entorno si existe el archivo .env (útil en dev)
-require('dotenv').config();
+// Cargar variables de entorno (desde la raíz o desde la carpeta actual)
+const envPath = fs.existsSync(path.join(__dirname, '.env')) 
+  ? path.join(__dirname, '.env') 
+  : path.join(__dirname, '../.env');
+require('dotenv').config({ path: envPath });
 
 const app = express();
 app.enable('trust proxy');
@@ -436,6 +439,10 @@ app.get('*', (req, res) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`Servidor Node.js Express corriendo en el puerto ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Servidor Node.js Express corriendo en el puerto ${PORT}`);
+  });
+}
+
+module.exports = app;

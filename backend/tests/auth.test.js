@@ -4,37 +4,38 @@ const request = require('supertest');
 const express = require('express');
 const bcrypt  = require('bcryptjs');
 
+const mockStores = {
+  esencia: {
+    slug:           'esencia',
+    name:           'Esencia Test',
+    email:          'test@esencia.com',
+    password_hash:  null, // Se setea en beforeAll
+    description:    '',
+    phone:          '',
+    address:        '',
+    store_url:      'http://esencia.katrix.com.ar',
+    plan_id:        'semilla',
+    payment_status: 'paid',
+    visit_count:    0,
+    created_at:     new Date(),
+  },
+};
+
 // Mock de knex para no necesitar una DB real en CI
 jest.mock('../db/knex', () => {
-  const stores = {
-    esencia: {
-      slug:           'esencia',
-      name:           'Esencia Test',
-      email:          'test@esencia.com',
-      password_hash:  null, // Se setea en beforeAll
-      description:    '',
-      phone:          '',
-      address:        '',
-      store_url:      'http://esencia.katrix.com.ar',
-      plan_id:        'semilla',
-      payment_status: 'paid',
-      visit_count:    0,
-      created_at:     new Date(),
-    },
-  };
   const tokens = {};
 
   const mockKnex = jest.fn((table) => ({
     where: jest.fn().mockReturnThis(),
     orWhere: jest.fn().mockReturnThis(),
     first: jest.fn(async () => {
-      if (table === 'stores') return stores.esencia;
+      if (table === 'stores') return mockStores.esencia;
       if (table === 'refresh_tokens') return tokens[Object.keys(tokens)[0]] || null;
       return null;
     }),
     insert: jest.fn(async (data) => {
       if (table === 'refresh_tokens') tokens[data.token] = data;
-      if (table === 'stores') return [{ ...stores.esencia, ...data }];
+      if (table === 'stores') return [{ ...mockStores.esencia, ...data }];
       return [data];
     }),
     update: jest.fn(async () => 1),
@@ -78,14 +79,8 @@ jest.mock('../lib/webhooks', () => ({ dispatch: jest.fn(async () => {}) }));
 let app;
 beforeAll(async () => {
   // Inyectar hash real para poder validar contraseña en tests
-  const knex = require('../db/knex');
   const hash = await bcrypt.hash('TestPassword123', 12);
-  knex('stores')().first.mockResolvedValue({
-    slug: 'esencia', name: 'Esencia Test', email: 'test@esencia.com',
-    password_hash: hash, payment_status: 'paid', visit_count: 0,
-    plan_id: 'semilla', store_url: 'http://esencia.katrix.com.ar',
-    description: '', phone: '', address: '', created_at: new Date(),
-  });
+  mockStores.esencia.password_hash = hash;
 
   app = express();
   app.use(express.json());
