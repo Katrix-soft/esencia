@@ -15,7 +15,7 @@ const statsRouter = require('./routes/stats');
 // Infraestructura
 const knex = require('./db/knex');
 const logger = require('./lib/logger');
-const cleanExpiredTokens = require('./lib/jwt');
+const { cleanExpiredTokens } = require('./lib/jwt');
 const { runMigrations } = require('./db/migrate');
 const crypto = require('crypto');
 const fs = require('fs');
