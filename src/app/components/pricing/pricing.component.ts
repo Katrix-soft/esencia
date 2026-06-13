@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component, AfterViewInit } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -779,7 +780,7 @@ export class PricingComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.scrollReveal.observeElements();
-    fetch('/api/plans')
+    fetch(`${environment.apiUrl}/api/plans`)
       .then(r => r.json())
       .then(data => { this.plans = data; this.plansLoading = false; })
       .catch(() => { this.plansLoading = false; });
@@ -897,7 +898,7 @@ export class PricingComponent implements AfterViewInit {
       }
 
       // Pedimos la llave pública al backend dinámicamente
-      const configRes = await fetch('/api/config');
+      const configRes = await fetch(`${environment.apiUrl}/api/config`);
       const configData = await configRes.json();
       const publicKey = configData.publicKey || 'APP_USR-7de37b05-1fe7-4e28-b855-3aaafc4a96f4';
 
