@@ -464,13 +464,13 @@ app.post('/webhook', async (req, res) => {
 // /api/config ya está montado en apiRouter — no duplicar
 
 // ==========================================
-// 4. Servir Aplicación Angular (Frontend)
+// 4. API-only: no servir archivos estáticos
 // ==========================================
-const distPath = path.join(__dirname, '../dist/esencia-app/browser');
-app.use(express.static(distPath));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+// Este servidor (backend/server.js) es una API pura.
+// El frontend Angular es servido por el servicio 'esencia' (Dockerfile raíz).
+// Si llegara alguna ruta no definida, devolvemos 404 JSON en lugar de crashear.
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint no encontrado', path: req.path });
 });
 
 // Iniciar servidor

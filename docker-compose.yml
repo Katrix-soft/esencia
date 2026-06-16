@@ -22,7 +22,6 @@ services:
       MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
       MERCADOPAGO_PUBLIC_KEY: ${MERCADOPAGO_PUBLIC_KEY}
       WEBHOOK_SECRET: ${WEBHOOK_SECRET}
-      WEBHOOK_SECRET_API: ${WEBHOOK_SECRET_API}
     depends_on:
       postgres:
         condition: service_healthy
