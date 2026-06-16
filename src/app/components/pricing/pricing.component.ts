@@ -907,7 +907,7 @@ export class PricingComponent implements AfterViewInit {
       }
 
       // Pedimos la llave pública al backend dinámicamente con fallback robusto
-      let publicKey = 'APP_USR-7de37b05-1fe7-4e28-b855-3aaafc4a96f4';
+      let publicKey = 'APP_USR-493602f7-ea70-4fb4-9114-0ea5ee52abe1';
       try {
         const configRes = await fetch(`${environment.apiUrl}/api/config`);
         const configData = await configRes.json();

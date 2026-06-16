@@ -44,9 +44,9 @@ const generalLimiter = rateLimit({
 app.use('/api', generalLimiter);
 
 app.use(cors({
-  origin: '*',
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-signature', 'x-request-id'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-signature', 'x-request-id', 'API_IA'],
   credentials: true
 }));
 app.use(express.json());
