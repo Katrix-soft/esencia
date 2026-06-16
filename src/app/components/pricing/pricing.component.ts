@@ -951,11 +951,13 @@ export class PricingComponent implements AfterViewInit {
             // callback llamado cuando el usuario haga clic en el botón enviar los datos
             return new Promise<void>((resolve, reject) => {
               
-              // Inyectamos el nombre y apellido recolectado en el Paso 1
+              // Inyectamos solo el email del Paso 1.
+              // IMPORTANTE: NO sobreescribir first_name/last_name del payer del brick.
+              // MP usa el nombre del titular de la tarjeta (escrito en el brick) para
+              // determinar el escenario de prueba: "APRO" → aprobado, "FUND" → fondos insuficientes, etc.
+              // El payer.first_name del brick proviene del campo "Titular" que el usuario escribe en la tarjeta.
               if (!formData.payer) formData.payer = {};
-              formData.payer.first_name = this.customerData.firstName;
-              formData.payer.last_name = this.customerData.lastName;
-              formData.payer.email = this.customerData.email;
+              if (!formData.payer.email) formData.payer.email = this.customerData.email;
 
               fetch(`${environment.apiUrl}/process_payment`, {
                 method: "POST",
