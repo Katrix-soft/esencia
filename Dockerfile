@@ -1,10 +1,11 @@
-# Dockerfile raíz — Build completo: Angular frontend + Express backend
-# Easypanel o Docker build desde la raíz del monorepo.
+# Dockerfile raíz — Servicio FRONTEND (esencia)
+# Compila Angular y lo sirve con nginx.
+# Para el backend, usar backend/Dockerfile (servicio backend-esencia).
 
 # ─────────────────────────────────────
-# Stage 1: Build de Angular (frontend)
+# Stage 1: Build de Angular
 # ─────────────────────────────────────
-FROM node:20-alpine AS frontend-builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
@@ -16,24 +17,16 @@ COPY src/ ./src/
 RUN npm run build
 
 # ─────────────────────────────────────
-# Stage 2: Backend Node.js (producción)
+# Stage 2: Servidor nginx (solo archivos estáticos)
 # ─────────────────────────────────────
-FROM node:20-alpine
-WORKDIR /app
+FROM nginx:alpine
 
-# Instalar solo dependencias de producción del backend
-COPY backend/package*.json ./
-RUN npm install --omit=dev
+# Copiar el build de Angular al directorio que sirve nginx
+COPY --from=builder /app/dist/esencia-app/browser /usr/share/nginx/html
 
-# Copiar el código completo del backend
-COPY backend/ ./
+# Copiar la configuración de nginx (SPA routing + headers de seguridad)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copiar el frontend compilado al lugar donde server.js lo sirve (../dist)
-COPY --from=frontend-builder /app/dist/ ../dist/
+EXPOSE 80
 
-# Directorio para emails fallback
-RUN mkdir -p /app/emails
-
-EXPOSE 3000
-
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]
