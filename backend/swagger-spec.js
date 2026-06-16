@@ -41,17 +41,17 @@ graph TD
 Los endpoints que modifican o leen información confidencial (POST, PUT, DELETE sobre tiendas o productos) requieren autenticación mediante cabeceras HTTP estándares:
 
 * **Header**: \`Authorization: Bearer <token_de_acceso>\`
-* **Token en Producción y Desarrollo**: El valor del token debe ser **exactamente** el valor configurado en la variable de entorno \`WEBHOOK_SECRET\` en tu archivo \`.env\` o en Easypanel.
+* **Token en Producción y Desarrollo**: El valor del token debe ser **exactamente** el valor configurado en la variable de entorno \`API_IA\` en tu archivo \`.env\` o en Easypanel.
 
 #### Ejemplo cURL de Endpoint Protegido:
 \`\`\`bash
-curl -H "Authorization: Bearer <TU_WEBHOOK_SECRET>" https://api.katrix.com.ar/api/stores
+curl -H "Authorization: Bearer <TU_API_IA>" https://api.katrix.com.ar/api/stores
 \`\`\`
 
 ---
 
 ### 🛡️ 3. Webhooks de Mercado Pago y Firma HMAC
-Para proteger nuestro webhook contra fraudes (peticiones falsas simulando pagos aprobados), implementamos validación criptográfica HMAC SHA-256 usando el \`WEBHOOK_SECRET\` provisto por Mercado Pago:
+Para proteger nuestro webhook contra fraudes (peticiones falsas simulando pagos aprobados), implementamos validación criptográfica HMAC SHA-256 usando la clave \`API_IA\`:
 
 1. **Mercado Pago envía dos cabeceras**:
    * \`x-signature\`: Contiene el timestamp (\`ts\`) y el hash de control (\`v1\`), ej: \`ts=1781137085,v1=74b56d773a29...\`
@@ -60,7 +60,7 @@ Para proteger nuestro webhook contra fraudes (peticiones falsas simulando pagos 
    El servidor concatena los datos recibidos en este formato exacto:
    \`id:{data.id};request-id:{x-request-id};ts:{ts};\`
 3. **Validación**:
-   Se calcula el HMAC SHA-256 de ese manifest usando el \`WEBHOOK_SECRET\`. Si coincide con el parámetro \`v1\` recibido, el pago es verídico y se procesa.
+   Se calcula el HMAC SHA-256 de ese manifest usando la clave \`API_IA\`. Si coincide con el parámetro \`v1\` recibido, el webhook es auténtico y se procesa.
 
 #### 🧪 Simular Webhook en Desarrollo (cURL):
 \`\`\`bash
@@ -133,7 +133,7 @@ Para facilitar el aprendizaje de trainees y juniors, aquí tienes los comandos \
 * **Producción**:
   \`\`\`bash
   curl -s -X POST https://api.katrix.com.ar/api/stores \\
-    -H "Authorization: Bearer <TU_WEBHOOK_SECRET_API>" \\
+    -H "Authorization: Bearer <TU_API_IA>" \\
     -H "Content-Type: application/json" \\
     -d '{"slug": "tienda-junior", "name": "Tienda Escuela", "email": "junior@katrix.com.ar"}'
   \`\`\`
@@ -149,7 +149,7 @@ Para facilitar el aprendizaje de trainees y juniors, aquí tienes los comandos \
 * **Producción**:
   \`\`\`bash
   curl -s -X POST https://api.katrix.com.ar/api/stores/tienda-junior/change-password \\
-    -H "Authorization: Bearer <TU_WEBHOOK_SECRET_API>" \\
+    -H "Authorization: Bearer <TU_API_IA>" \\
     -H "Content-Type: application/json" \\
     -d '{"password": "NuevaClaveTrainee2026"}'
   \`\`\`
@@ -165,7 +165,7 @@ Para facilitar el aprendizaje de trainees y juniors, aquí tienes los comandos \
 * **Producción**:
   \`\`\`bash
   curl -s -X PUT https://api.katrix.com.ar/api/stores/tienda-junior/billing \\
-    -H "Authorization: Bearer <TU_WEBHOOK_SECRET_API>" \\
+    -H "Authorization: Bearer <TU_API_IA>" \\
     -H "Content-Type: application/json" \\
     -d '{"paymentStatus": "unpaid"}'
   \`\`\`
@@ -469,7 +469,7 @@ Retorna una lista detallada con los métodos de pago (Visa, Mastercard, Rapipago
 - **Eventos a suscribir:** \`Orders\`
 
 ### Validación de firma HMAC
-Si \`WEBHOOK_SECRET\` está configurado en \`.env\`, el servidor valida la autenticidad del webhook:
+Si \`API_IA\` está configurado en \`.env\`, el servidor valida la autenticidad del webhook:
 \`\`\`
 x-signature: ts=1234567890,v1=abc123...
 x-request-id: req-uuid-aqui

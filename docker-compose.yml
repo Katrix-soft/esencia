@@ -21,7 +21,7 @@ services:
       JWT_EXPIRES_IN: 15m
       MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
       MERCADOPAGO_PUBLIC_KEY: ${MERCADOPAGO_PUBLIC_KEY}
-      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+      API_IA: ${API_IA}
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,13 +1,11 @@
 // middleware/auth.js — Middleware de autenticación JWT
 // Acepta dos formas de autenticación:
 //   1. JWT real (emitido por /auth/login) — para el panel admin del dueño de la tienda
-//   2. WEBHOOK_SECRET_API — para operaciones administrativas del sistema (backward compat)
+//   2. API_IA — clave secreta para operaciones administrativas del sistema
 const { verifyAccessToken } = require('../lib/jwt');
 const logger = require('../lib/logger');
 
-const API_SECRET = process.env.WEBHOOK_SECRET_API
-  || process.env.WEBHOOK_SECRET
-  || '9ffdc0452246247666f9f7bf233d2059a2f1cfe40068d15bee7fe09b296bd2ad5de57442315d20bfc2fa46f6abeab11ec76126c143d5888c3707362e302db8b6';
+const API_SECRET = process.env.API_IA || '';
 
 function authMiddleware(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -21,7 +19,7 @@ function authMiddleware(req, res, next) {
 
   const token = authHeader.split(' ')[1];
 
-  // Opción 1: Token de sistema (WEBHOOK_SECRET_API) — operaciones admin
+  // Opción 1: Token de sistema (API_IA) — operaciones admin
   if (token === API_SECRET) {
     req.authType = 'api_secret';
     req.isAdmin  = true;
@@ -48,8 +46,7 @@ function authMiddleware(req, res, next) {
 // Middleware adicional: verifica que el JWT pertenezca a la tienda del recurso
 // (evita que la tienda A edite productos de la tienda B)
 function requireStoreOwnership(req, res, next) {
-  if (req.isAdmin) return next(); // El sistema admin puede todo
-
+  if (req.isAdmin) return next();  // Solo el sistema (API_IA) puede cambiar el estado de pago
   const { slug } = req.params;
   if (req.storeSlug && req.storeSlug !== slug) {
     return res.status(403).json({

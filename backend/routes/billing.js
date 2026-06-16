@@ -50,7 +50,7 @@ router.get('/:slug/billing', authMiddleware, async (req, res) => {
 // PUT /stores/:slug/billing — Actualizar estado de pago (solo admin del sistema)
 // =====================================================
 router.put('/:slug/billing', authMiddleware, validate(billingSchema), async (req, res) => {
-  // Solo el sistema (WEBHOOK_SECRET_API) puede cambiar el estado de pago
+  // Solo el sistema (API_IA) puede cambiar el estado de pago
   if (!req.isAdmin) {
     return res.status(403).json({
       error: 'Acceso denegado',

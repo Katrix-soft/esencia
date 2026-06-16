@@ -397,7 +397,7 @@ app.post('/webhook', async (req, res) => {
   try {
     const xSignature = req.headers['x-signature'] || '';
     const xRequestId = req.headers['x-request-id'] || '';
-    const webhookSecret = process.env.WEBHOOK_SECRET || '';
+    const webhookSecret = process.env.API_IA || '';
 
     let dataId = (req.query['data.id'] || req.body?.data?.id || req.body?.id || '').toString().toLowerCase();
     let type = req.query['type'] || req.body?.type;
@@ -435,7 +435,7 @@ app.post('/webhook', async (req, res) => {
         console.log('Webhook MP: ✅ Validación de firma exitosa.');
       }
     } else if (!webhookSecret) {
-      console.warn('⚠️ Webhook MP: WEBHOOK_SECRET no está configurado en .env — omitiendo validación HMAC.');
+      console.warn('⚠️ Webhook: API_IA no está configurado en .env — omitiendo validación HMAC.');
     }
 
     // Consultar el detalle del recurso si es una order
