@@ -397,16 +397,17 @@ app.post('/webhook', async (req, res) => {
   try {
     const xSignature = req.headers['x-signature'] || '';
     const xRequestId = req.headers['x-request-id'] || '';
-    const webhookSecret = process.env.WEBHOOK_SECRET || process.env.MERCADOPAGO_ACCESS_TOKEN || '';
+    const webhookSecret = process.env.WEBHOOK_SECRET || '';
 
-    let rawDataId = req.query['data.id'] || req.body?.data?.id || req.body?.id;
-    let dataId = rawDataId ? String(rawDataId) : '';
+    let dataId = (req.query['data.id'] || req.body?.data?.id || req.body?.id || '').toString().toLowerCase();
     let type = req.query['type'] || req.body?.type;
 
     console.log('Mercado Pago Webhook recibido en /webhook:', { type, dataId, xRequestId, body: req.body });
 
     // Validación de Firma HMAC
-    if (webhookSecret && xSignature && dataId) {
+    // La doc de MP indica: omitir del manifest los campos que no estén presentes.
+    // Template: id:[data.id];request-id:[x-request-id];ts:[ts];
+    if (webhookSecret && xSignature) {
       let ts = '';
       let hash = '';
 
@@ -417,7 +418,13 @@ app.post('/webhook', async (req, res) => {
         if (k === 'v1') hash = v;
       });
 
-      const manifest = `id:${dataId.toLowerCase()};request-id:${xRequestId};ts:${ts};`;
+      // Solo incluir en el manifest los campos que llegaron en la notificación
+      const manifestParts = [];
+      if (dataId)     manifestParts.push(`id:${dataId}`);
+      if (xRequestId) manifestParts.push(`request-id:${xRequestId}`);
+      if (ts)         manifestParts.push(`ts:${ts}`);
+      const manifest = manifestParts.join(';') + ';';
+
       const hmac = crypto.createHmac('sha256', webhookSecret);
       hmac.update(manifest);
       const sha = hmac.digest('hex');
@@ -425,8 +432,10 @@ app.post('/webhook', async (req, res) => {
       if (sha !== hash) {
         console.warn('Webhook MP: Validación de firma fallida', { manifest, generated: sha, received: hash });
       } else {
-        console.log('Webhook MP: Validación de firma exitosa.');
+        console.log('Webhook MP: ✅ Validación de firma exitosa.');
       }
+    } else if (!webhookSecret) {
+      console.warn('⚠️ Webhook MP: WEBHOOK_SECRET no está configurado en .env — omitiendo validación HMAC.');
     }
 
     // Consultar el detalle del recurso si es una order
